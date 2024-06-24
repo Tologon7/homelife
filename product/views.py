@@ -32,6 +32,17 @@ class ProductListCreateView(generics.ListCreateAPIView):
     filterset_class = ProductFilter
 
 
+
+class ProductListCreateViewID(generics.ListCreateAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = ProductFilter
+
+
+    def get_queryset(self):
+        return Product.objects.filter(product_id=self.kwargs["product_id"])
+
 class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
