@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'django_filters',
     'decouple',
+    'drf_yasg',
 
     #auth
     'rest_framework.authtoken',
