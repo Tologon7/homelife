@@ -26,11 +26,13 @@ class ProductListCreateView(generics.ListCreateAPIView):
     filter_backends = [DjangoFilterBackend]
     filterset_class = ProductFilter
 
+
 class ProductListCreateViewID(generics.ListCreateAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_class = ProductFilter
+
 
     def get_queryset(self):
         return Product.objects.filter(product_id=self.kwargs["product_id"])
