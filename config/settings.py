@@ -35,6 +35,7 @@ DEBUG = config('DEBUG', default=False, cast=bool)
 ALLOWED_HOSTS = ['*']
 
 
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -51,6 +52,7 @@ INSTALLED_APPS = [
     'django_filters',
     'decouple',
     'drf_yasg',
+
 
     #auth
     'rest_framework.authtoken',

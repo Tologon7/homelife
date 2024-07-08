@@ -9,7 +9,6 @@ class ColorSerializer(serializers.ModelSerializer):
         model = Color
         fields = ["title"]
 
-
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
@@ -43,6 +42,7 @@ class ProductSerializer(serializers.ModelSerializer):
             color=color_instance,
             brand=brand_instance,
             **validated_data
+
         )
 
         return product
