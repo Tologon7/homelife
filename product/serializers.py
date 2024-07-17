@@ -9,15 +9,18 @@ class ColorSerializer(serializers.ModelSerializer):
         model = Color
         fields = ["title"]
 
+
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = ["title"]
 
+
 class BrandSerializer(serializers.ModelSerializer):
     class Meta:
         model = Brand
         fields = ["title"]
+
 
 class ProductSerializer(serializers.ModelSerializer):
     category = CategorySerializer()
