@@ -1,10 +1,12 @@
 from rest_framework.mixins import CreateModelMixin, RetrieveModelMixin, DestroyModelMixin
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
-from .models import Cart, CartItem
+from .models import *
 from .serializers import CartSerializer, CartItemSerializer, AddCartItemSerializer, UpdateCartItemSerializer
 from rest_framework.response import Response
 from rest_framework import status
 from drf_yasg.utils import swagger_auto_schema
+from .utils import send_order_notification
+from rest_framework.views import APIView
 
 
 class CartViewSet(CreateModelMixin, RetrieveModelMixin, DestroyModelMixin, GenericViewSet):
@@ -127,3 +129,16 @@ class CartItemViewSet(ModelViewSet):
 
     def perform_destroy(self, instance):
         instance.delete()
+
+
+class OrderCreateView(APIView):
+    def post(self, request, *args, **kwargs):
+        cart_id = request.data.get('cart_id')
+        try:
+            cart = CartItem.objects.get(id=cart_id)
+            total_price = sum(item.product.price * item.quantity for item in cart.items.all())
+            order = Order.objects.create(cart=cart, total_price=total_price)
+            send_order_notification(order)
+            return Response({'message': 'Order created successfully'}, status=status.HTTP_201_CREATED)
+        except Cart.DoesNotExist:
+            return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
