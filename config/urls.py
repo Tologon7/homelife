@@ -1,7 +1,6 @@
 from django.contrib import admin
 from django.urls import path
 from django.urls import path, include
-import certifi
 
 
 from django.urls import re_path
@@ -21,8 +20,8 @@ schema_view = get_schema_view(
    ),
    public=True,
    permission_classes=(permissions.AllowAny,),
-)
 
+)
 
 
 urlpatterns = [

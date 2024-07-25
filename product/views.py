@@ -4,6 +4,7 @@ from .serializers import CategorySerializer, ColorSerializer, ProductSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 from .filters import ProductFilter
 from drf_yasg.utils import swagger_auto_schema
+from .pagination import CustomPagination
 
 
 class CategoryListCreateView(generics.ListCreateAPIView):
@@ -99,6 +100,7 @@ class ColorDetailView(generics.RetrieveUpdateDestroyAPIView):
 class ProductListCreateView(generics.ListCreateAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+    pagination_class = CustomPagination
     filter_backends = [DjangoFilterBackend]
     filterset_class = ProductFilter
 
@@ -170,10 +172,12 @@ class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
 class ProductNewlView(generics.ListCreateAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+    pagination_class = CustomPagination
+
 
     @swagger_auto_schema(
         tags=['product'],
-        operation_description="Этот эндпоинт позволяет получить список всех продуктов, отсортированных по ID в обратном порядке, и создать новый продукт."
+        operation_description="Этот эндпоинт позволяет получить список новинок продуктов, и создать новый продукт."
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
