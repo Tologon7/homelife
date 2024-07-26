@@ -4,15 +4,26 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-# from django.contrib.auth.models import User
-from django.contrib.auth.tokens import default_token_generator
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.utils.encoding import force_bytes, force_str
 from django.core.validators import RegexValidator
 from django.contrib.auth.hashers import check_password
 from rest_framework import serializers
 from users.models import User, OTP
 import re
+
+
+class PasswordMixinRegister(serializers.Serializer):
+    password = serializers.CharField(write_only=True, required=True)
+
+    def validate(self, attrs):
+        password = attrs['password']
+        if not re.search(r'[A-Z]', password):
+            raise serializers.ValidationError({'password': "Password must contain at least one uppercase letter."})
+        if not re.search(r'[!@#$%^&*]', password):
+            raise serializers.ValidationError(
+                {'password': "Password must contain at least one special character (!@#$%^&*)."})
+        if len(password) < 8:
+            raise serializers.ValidationError({'password': "Password must be at least 8 characters long."})
+        return attrs
 
 
 class PasswordMixin(serializers.Serializer):
@@ -92,14 +103,28 @@ class UserProfileSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+
 # register
-class UserRegistrationSerializer(serializers.ModelSerializer):
+class UserRegistrationSerializer(serializers.ModelSerializer, PasswordMixinRegister):
+    username = serializers.CharField(
+        validators=[
+            RegexValidator(
+                regex=r'^[a-zA-Z0-9!@#$%^&*()_+.-]+$',
+                message='Username can only contain English letters, numbers, and special characters (!@#$%%^&*()_+.-)',
+                # Обратите внимание на %% перед ^
+            ),
+        ],
+        min_length=6,
+        max_length=20,
+        required=False
+    )
+
     password = serializers.CharField(write_only=True)
     wholesaler = serializers.BooleanField(required=False, default=False)
 
     class Meta:
         model = get_user_model()
-        fields = ['email', 'first_name', 'last_name', 'username', 'number', 'wholesaler', 'password']
+        fields = ['first_name', 'last_name', 'email', 'username', 'number', 'wholesaler', 'password']
 
     def create(self, validated_data):
         user = get_user_model().objects.create_user(
