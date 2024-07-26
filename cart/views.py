@@ -135,7 +135,7 @@ class OrderCreateView(APIView):
     def post(self, request, *args, **kwargs):
         cart_id = request.data.get('cart_id')
         try:
-            cart = CartItem.objects.get(id=cart_id)
+            cart = Cart.objects.get(id=cart_id)
             total_price = sum(item.product.price * item.quantity for item in cart.items.all())
             order = Order.objects.create(cart=cart, total_price=total_price)
             send_order_notification(order)
