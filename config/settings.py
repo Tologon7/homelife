@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
 
     #library
     'rest_framework',
@@ -81,6 +82,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 
 ]
 
@@ -215,3 +217,14 @@ SIMPLE_JWT = {
     'TOKEN_TYPE_CLAIM': 'token_type',
     'JTI_CLAIM': 'jti',
 }
+
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # Укажите URL вашего фронтенда
+    # добавьте другие разрешенные домены
+]
+
+CORS_ALLOW_CREDENTIALS = True  # Позволяет использование куки
+
+# Если нужно разрешить запросы с любых доменов (не рекомендуется для продакшена)
+# CORS_ALLOW_ALL_ORIGINS = True
