@@ -9,6 +9,8 @@ from django.contrib.auth.hashers import check_password
 from rest_framework import serializers
 from users.models import User, OTP
 import re
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
 
 
 class PasswordMixinRegister(serializers.Serializer):
@@ -111,7 +113,6 @@ class UserRegistrationSerializer(serializers.ModelSerializer, PasswordMixinRegis
             RegexValidator(
                 regex=r'^[a-zA-Z0-9!@#$%^&*()_+.-]+$',
                 message='Username can only contain English letters, numbers, and special characters (!@#$%%^&*()_+.-)',
-                # Обратите внимание на %% перед ^
             ),
         ],
         min_length=6,
@@ -148,32 +149,18 @@ class UserRegistrationSerializer(serializers.ModelSerializer, PasswordMixinRegis
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         tokens = self.get_tokens_for_user(instance)
-        representation.update(tokens)
+        representation['tokens'] = tokens
         return representation
+
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
-    @classmethod
-    def get_token(cls, user):
-        token = super().get_token(user)
-        return token
-
     def validate(self, attrs):
         data = super().validate(attrs)
-
-        user_data = {
-            'first_name': self.user.first_name,
-            'last_name': self.user.last_name,
-            'email': self.user.email,
-            'username': self.user.username,
-            'number': self.user.number,
-            'wholesaler': self.user.wholesaler,
-        }
-
-        data.update({'user': user_data})
-
+        data['user'] = self.user  # добавляем объект пользователя
         return data
+
 
 
 # class UserLoginSerializer(serializers.Serializer):

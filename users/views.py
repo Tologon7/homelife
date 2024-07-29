@@ -74,10 +74,12 @@ class UserRegisterView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
-            return Response({
-                'user': UserRegistrationSerializer(user).data
-            }, status=status.HTTP_201_CREATED)
+            tokens = serializer.get_tokens_for_user(user)
+            user_data = UserRegistrationSerializer(user).data
+            user_data['tokens'] = tokens
+            return Response({'user': user_data}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 class UserLoginView(TokenObtainPairView):
@@ -87,12 +89,18 @@ class UserLoginView(TokenObtainPairView):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             data = serializer.validated_data
-            return Response({
-                'user': data['user'],
+            user = data['user']
+            tokens = {
                 'access': str(data['access']),
                 'refresh': str(data['refresh']),
-            })
+            }
+            user_data = UserRegistrationSerializer(user).data
+            user_data['tokens'] = tokens
+            return Response({'user': user_data})
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
 
 
 class UserLogoutView(generics.GenericAPIView):
