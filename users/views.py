@@ -67,7 +67,7 @@ class UserProfileUpdateView(generics.GenericAPIView):
             return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class UserRegisterUserView(generics.CreateAPIView):
+class UserRegisterView(generics.CreateAPIView):
     serializer_class = UserRegistrationSerializer
 
     def post(self, request, *args, **kwargs):
@@ -88,6 +88,7 @@ class UserLoginView(TokenObtainPairView):
         if serializer.is_valid():
             data = serializer.validated_data
             return Response({
+                'user': data['user'],
                 'access': str(data['access']),
                 'refresh': str(data['refresh']),
             })

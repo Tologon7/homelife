@@ -153,16 +153,32 @@ class UserRegistrationSerializer(serializers.ModelSerializer, PasswordMixinRegis
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
-        # Добавьте дополнительные поля в токен, если нужно
         return token
 
+    def validate(self, attrs):
+        data = super().validate(attrs)
 
-class UserLoginSerializer(serializers.Serializer):
-    refresh = serializers.CharField()
-    access = serializers.CharField()
+        user_data = {
+            'first_name': self.user.first_name,
+            'last_name': self.user.last_name,
+            'email': self.user.email,
+            'username': self.user.username,
+            'number': self.user.number,
+            'wholesaler': self.user.wholesaler,
+        }
+
+        data.update({'user': user_data})
+
+        return data
+
+
+# class UserLoginSerializer(serializers.Serializer):
+#     refresh = serializers.CharField()
+#     access = serializers.CharField()
 
 
 class UserLogoutSerializer(serializers.Serializer):
