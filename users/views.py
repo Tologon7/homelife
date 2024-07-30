@@ -81,7 +81,6 @@ class UserRegisterView(generics.CreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
 class UserLoginView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
