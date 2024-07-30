@@ -82,7 +82,7 @@ class UserRegisterView(generics.CreateAPIView):
 
 
 class UserLoginView(TokenObtainPairView):
-    serializer_class = CustomTokenObtainPairSerializer
+    serializer_class = UserLoginSerializer
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)

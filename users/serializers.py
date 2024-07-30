@@ -153,9 +153,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer, PasswordMixinRegis
         return representation
 
 
-
-class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-
+class UserLoginSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
         data['user'] = self.user  # добавляем объект пользователя
