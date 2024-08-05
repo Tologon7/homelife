@@ -125,8 +125,12 @@ class UserLogoutView(generics.GenericAPIView):
 
     @swagger_auto_schema(
         tags=['Authentication'],
-        operation_description="Этот эндпоинт предоставляет пользователям"
-                              " возможность выйти с аккаунта ",
+        operation_description="Этот эндпоинт предоставляет "
+                              "возможность аутентифицированным "
+                              "пользователям обновить свой профиль, "
+                              "предоставив новые данные. После успешного "
+                              "обновления профиля, система возвращает "
+                              "сообщение об успешном обновлении.",
     )
 
     def post(self, request, *args, **kwargs):
