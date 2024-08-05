@@ -168,9 +168,7 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
-    ),
+
 }
 
 
@@ -204,8 +202,8 @@ AUTH_USER_MODEL = 'users.User'
 
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
     'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': True,
     'ALGORITHM': 'HS256',
@@ -231,3 +229,30 @@ CORS_ALLOW_CREDENTIALS = True  # Позволяет использование �
 
 # Если нужно разрешить запросы с любых доменов (не рекомендуется для продакшена)
 # CORS_ALLOW_ALL_ORIGINS = True
+
+
+# cloudinary
+# import cloudinary
+# import cloudinary.uploader
+# from cloudinary.utils import cloudinary_url
+#
+# # Configuration
+# cloudinary.config(
+#     cloud_name = "dpjm0tsmq",
+#     api_key = "388678142341313",
+#     api_secret = "<your_api_secret>", # Click 'View Credentials' below to copy your API secret
+#     secure=True
+# )
+#
+# # Upload an image
+# upload_result = cloudinary.uploader.upload("https://res.cloudinary.com/demo/image/upload/getting-started/shoes.jpg",
+#                                            public_id="shoes")
+# print(upload_result["secure_url"])
+#
+# # Optimize delivery by resizing and applying auto-format and auto-quality
+# optimize_url, _ = cloudinary_url("shoes", fetch_format="auto", quality="auto")
+# print(optimize_url)
+#
+# # Transform the image: auto-crop to square aspect_ratio
+# auto_crop_url, _ = cloudinary_url("shoes", width=500, height=500, crop="auto", gravity="auto")
+# print(auto_crop_url)

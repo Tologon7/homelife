@@ -70,6 +70,15 @@ class UserProfileUpdateView(generics.GenericAPIView):
 class UserRegisterView(generics.CreateAPIView):
     serializer_class = UserRegistrationSerializer
 
+    @swagger_auto_schema(
+        tags=['Authentication'],
+        operation_description="Этот эндпоинт предоставляет "
+                              "возможность пользователям зарегистрироваться "
+                              "в системе, предоставив необходимые данные. "
+                              "После успешной регистрации, система создает "
+                              "новую запись пользователя и возвращает информацию о нем.",
+    )
+
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
@@ -83,6 +92,18 @@ class UserRegisterView(generics.CreateAPIView):
 
 class UserLoginView(TokenObtainPairView):
     serializer_class = UserLoginSerializer
+
+    @swagger_auto_schema(
+        tags=['Authentication'],
+        operation_description="Этот эндпоинт предоставляет "
+                              "возможность пользователям войти "
+                              "в систему, предоставив имя пользователя "
+                              "и пароль. После успешного входа, система "
+                              "генерирует Access Token и Refresh Token для "
+                              "пользователя, которые можно использовать для "
+                              "доступа к защищенным ресурсам. \nСрок действия 'access' токена - "
+                              "60 минут, а refresh токена - 30 дней.",
+    )
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -99,11 +120,14 @@ class UserLoginView(TokenObtainPairView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
-
-
 class UserLogoutView(generics.GenericAPIView):
     serializer_class = UserLogoutSerializer
+
+    @swagger_auto_schema(
+        tags=['Authentication'],
+        operation_description="Этот эндпоинт предоставляет пользователям"
+                              " возможность выйти с аккаунта ",
+    )
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
