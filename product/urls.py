@@ -11,8 +11,8 @@ urlpatterns = [
     path('list/', ProductListCreateView.as_view(), name='product-list'),
     path('list/new/', ProductNewlView.as_view(), name='product-list-new'),
     path('list/<int:pk>/', ProductDetailView.as_view(), name='product-detail'),
-    path('review/', RatingViewSet.as_view({'get': 'list', 'post': 'create'}), name='review-list-create'),
-    path('review/<int:pk>/', RatingViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'}), name='review-detail'),
+    # path('review/', RatingViewSet.as_view({'get': 'list', 'post': 'create'}), name='review-list-create'),
+    # path('review/<int:pk>/', RatingViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'}), name='review-detail'),
 ] + debug_toolbar_urls()
 
 
