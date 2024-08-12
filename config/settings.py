@@ -54,7 +54,7 @@ INSTALLED_APPS = [
     'django_filters',
     'decouple',
     'drf_yasg',
-
+    'debug_toolbar',
 
     #auth
     'rest_framework.authtoken',
@@ -83,6 +83,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
 
 ]
 

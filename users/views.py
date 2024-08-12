@@ -128,7 +128,6 @@ class UserLogoutView(generics.GenericAPIView):
         operation_description="Этот эндпоинт предоставляет пользователям"
                               " возможность выйти с аккаунта ",
     )
-
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -139,6 +138,7 @@ class UserLogoutView(generics.GenericAPIView):
         try:
             token = RefreshToken(refresh_token)
             token.blacklist()
+            return Response({"message": "You have successfully logged out."}, status=status.HTTP_200_OK)
         except Exception as e:
             raise serializers.ValidationError({'refresh': str(e)})
 

@@ -1,10 +1,13 @@
 from rest_framework import generics
-from .models import Category, Color, Product
+from .models import Category, Color, Product, Rating
 from .serializers import CategorySerializer, ColorSerializer, ProductSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 from .filters import ProductFilter
 from drf_yasg.utils import swagger_auto_schema
 from .pagination import CustomPagination
+from rest_framework.viewsets import ModelViewSet
+from rest_framework.permissions import IsAuthenticated
+from product.serializers import *
 
 
 class CategoryListCreateView(generics.ListCreateAPIView):
@@ -191,3 +194,22 @@ class ProductNewlView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         return Product.objects.all().order_by('-id')
+
+
+class ProductViewSet(ModelViewSet):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+
+
+class RatingViewSet(ModelViewSet):
+    # queryset = Rating.objects.all()
+    serializer_class = RatingSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Rating.objects.filter(product_id=self.kwargs['product_pk'])
+
+    def get_serializer_context(self):
+        user_id = self.request.user.id
+        product_id = self.kwargs["product_pk"]
+        return {"user_id": user_id, "product_id": product_id}

@@ -1,7 +1,8 @@
 from django.contrib import admin
 from django.urls import path
 from django.urls import path, include
-
+from config import settings
+from django.conf.urls.static import static
 
 from django.urls import re_path
 from rest_framework import permissions
@@ -41,3 +42,13 @@ urlpatterns = [
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 
 ]
+
+
+# if settings.DEBUG:
+#     import debug_toolbar
+#
+#     urlpatterns = [
+#         path('__debug__/', include(debug_toolbar.urls)),
+#     ] + urlpatterns
+#
+#     urlpatterns += static(settings.MEDIA.URL, document_root=settings.MEDIA_ROOT)
