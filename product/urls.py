@@ -1,6 +1,5 @@
 from django.urls import path
 from .views import *
-from debug_toolbar.toolbar import debug_toolbar_urls
 
 urlpatterns = [
     path('categories/', CategoryListCreateView.as_view(), name='category-list'),
@@ -11,4 +10,4 @@ urlpatterns = [
     path('list/', ProductListCreateView.as_view(), name='product-list'),
     path('list/new/', ProductNewlView.as_view(), name='product-list-new'),
     path('list/<int:pk>/', ProductDetailView.as_view(), name='product-detail'),
-] + debug_toolbar_urls()
+]
