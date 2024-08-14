@@ -26,11 +26,11 @@ class Color(models.Model):
 class Product(models.Model):
     title = models.CharField(max_length=255)
     img = models.ImageField()
-    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products')
-    color = models.ForeignKey(Color, on_delete=models.CASCADE)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products', null=True, blank=True)
+    color = models.ForeignKey(Color, on_delete=models.CASCADE, null=True, blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    promotion = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)  # Позволяет null и пустое значение
-    brand = models.ForeignKey(Brand, on_delete=models.CASCADE, related_name='products')
+    promotion = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    brand = models.ForeignKey(Brand, on_delete=models.CASCADE, related_name='products', null=True, blank=True)
     quantity = models.IntegerField()
     description = models.TextField(max_length=2551)
 

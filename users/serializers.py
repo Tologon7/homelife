@@ -68,7 +68,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'number', 'wholesaler']
+        fields = ['id', 'username', 'first_name', 'last_name', 'gender', 'age', 'email', 'number', 'wholesaler']
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -87,17 +87,19 @@ class UserProfileSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(required=False)
     first_name = serializers.CharField(required=False)
     last_name = serializers.CharField(required=False)
+    age = serializers.IntegerField(required=False)
     number = serializers.IntegerField(required=False)
     wholesaler = serializers.BooleanField(required=False)
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'number', 'wholesaler']
+        fields = ['id', 'username', 'first_name', 'last_name', 'gender', 'age', 'email', 'number', 'wholesaler']
 
     def update(self, instance, validated_data):
         instance.username = validated_data.get('username', instance.username)
         instance.first_name = validated_data.get('first_name', instance.first_name)
         instance.last_name = validated_data.get('last_name', instance.last_name)
+        instance.age = validated_data.get('age', instance.age)
         instance.email = validated_data.get('email', instance.email)
         instance.number = validated_data.get('number', instance.number)
         instance.wholesaler = validated_data.get('wholesaler', instance.wholesaler)
@@ -125,7 +127,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer, PasswordMixinRegis
 
     class Meta:
         model = get_user_model()
-        fields = ['first_name', 'last_name', 'email', 'username', 'number', 'wholesaler', 'password']
+        fields = ['first_name', 'last_name', 'gender', 'age', 'email', 'username', 'number', 'wholesaler', 'password']
 
     def create(self, validated_data):
         user = get_user_model().objects.create_user(
@@ -133,6 +135,8 @@ class UserRegistrationSerializer(serializers.ModelSerializer, PasswordMixinRegis
             password=validated_data['password'],
             first_name=validated_data.get('first_name', ''),
             last_name=validated_data.get('last_name', ''),
+            gender=validated_data.get('gender', ''),
+            age=validated_data.get('age', ''),
             username=validated_data.get('username', ''),
             number=validated_data.get('number', 0),
             wholesaler=validated_data.get('wholesaler', False),

@@ -25,11 +25,19 @@ class CustomUserManager(BaseUserManager):
 
         return self.create_user(email, password, **extra_fields)
 
+class Gender(models.Model):
+    title = models.CharField(max_length=20)
+
+    def __str__(self):
+        return self.title
+
 
 class User(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(max_length=255)
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
+    gender = models.ForeignKey(Gender, on_delete=models.CASCADE)
+    age = models.IntegerField()
     email = models.EmailField(unique=True)
     number = models.IntegerField()
     wholesaler = models.BooleanField(default=False)

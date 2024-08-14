@@ -122,28 +122,28 @@ class ProductListCreateView(generics.ListCreateAPIView):
         return super().post(request, *args, **kwargs)
 
 
-class ProductListCreateViewID(generics.ListCreateAPIView):
-    queryset = Product.objects.all()
-    serializer_class = ProductSerializer
-    filter_backends = [DjangoFilterBackend]
-    filterset_class = ProductFilter
-
-    @swagger_auto_schema(
-        tags=['product'],
-        operation_description="Этот эндпоинт позволяет получить список продуктов по product_id и создать новый продукт."
-    )
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
-
-    @swagger_auto_schema(
-        tags=['product'],
-        operation_description="Этот эндпоинт позволяет создать новый продукт."
-    )
-    def post(self, request, *args, **kwargs):
-        return super().post(request, *args, **kwargs)
-
-    def get_queryset(self):
-        return Product.objects.filter(product_id=self.kwargs["product_id"])
+# class ProductListCreateViewID(generics.ListCreateAPIView):
+#     queryset = Product.objects.all()
+#     serializer_class = ProductSerializer
+#     filter_backends = [DjangoFilterBackend]
+#     filterset_class = ProductFilter
+#
+#     @swagger_auto_schema(
+#         tags=['product'],
+#         operation_description="Этот эндпоинт позволяет получить список продуктов по product_id и создать новый продукт."
+#     )
+#     def get(self, request, *args, **kwargs):
+#         return super().get(request, *args, **kwargs)
+#
+#     @swagger_auto_schema(
+#         tags=['product'],
+#         operation_description="Этот эндпоинт позволяет создать новый продукт."
+#     )
+#     def post(self, request, *args, **kwargs):
+#         return super().post(request, *args, **kwargs)
+#
+#     def get_queryset(self):
+#         return Product.objects.filter(product_id=self.kwargs["product_id"])
 
 
 class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -196,6 +196,13 @@ class ProductNewlView(generics.ListCreateAPIView):
         return Product.objects.all().order_by('-id')
 
 
-class ProductViewSet(ModelViewSet):
+class ProductCreateView(generics.ListCreateAPIView):
     queryset = Product.objects.all()
-    serializer_class = ProductSerializer
+    serializer_class = ProductCreateSerializer
+
+    @swagger_auto_schema(
+        tags=['product'],
+        operation_description="Этот эндпоинт позволяет создать новый продукт."
+    )
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)

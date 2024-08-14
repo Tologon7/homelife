@@ -49,3 +49,7 @@ class ProductSerializer(serializers.ModelSerializer):
         return product
 
 
+class ProductCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = '__all__'
