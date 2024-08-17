@@ -4,7 +4,6 @@ from cloudinary.models import CloudinaryField
 from decimal import Decimal, InvalidOperation
 
 
-
 class Category(models.Model):
     title = models.CharField(max_length=200)
 

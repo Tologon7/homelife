@@ -1,11 +1,8 @@
-
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import generics
-# from .models import Category, Color, Product, Rating
-from .serializers import CategorySerializer, ColorSerializer, ProductSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 from .filters import ProductFilter
 from drf_yasg.utils import swagger_auto_schema
@@ -16,7 +13,6 @@ from product.serializers import *
 
 
 class HomepageView(APIView):
-
     def get(self, request, *args, **kwargs):
         new_products = Product.objects.all().order_by('-id')
         promotion_products = Product.objects.filter(promotion__isnull=False)
@@ -84,6 +80,51 @@ class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
     @swagger_auto_schema(
         tags=['category'],
         operation_description="Этот эндпоинт позволяет удалить категорию по ID."
+    )
+    def delete(self, request, *args, **kwargs):
+        return super().delete(request, *args, **kwargs)
+
+
+class BrandListCreateView(generics.ListCreateAPIView):
+    queryset = Brand.objects.all()
+    serializer_class = BrandSerializer
+
+    @swagger_auto_schema(
+        tags=['brand'],
+        operation_description="Этот эндпоинт позволяет получить список всех брендов и создать новый бренд."
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        tags=['brand'],
+        operation_description="Этот эндпоинт позволяет создать новый бренд."
+    )
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
+
+
+class BrandDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Brand.objects.all()
+    serializer_class = BrandSerializer
+
+    @swagger_auto_schema(
+        tags=['brand'],
+        operation_description="Этот эндпоинт позволяет получить, обновить или удалить бренд по ID."
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        tags=['brand'],
+        operation_description="Этот эндпоинт позволяет обновить бренд по ID."
+    )
+    def put(self, request, *args, **kwargs):
+        return super().put(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        tags=['brand'],
+        operation_description="Этот эндпоинт позволяет удалить бренд по ID."
     )
     def delete(self, request, *args, **kwargs):
         return super().delete(request, *args, **kwargs)

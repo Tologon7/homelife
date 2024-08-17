@@ -239,9 +239,9 @@ import cloudinary.uploader
 
 
 CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': 'dpjm0tsmq',
-    'API_KEY': '388678142341313',
-    'API_SECRET': '0ecNShLjktMNc7pfaOvR1ET72TA'
+    'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY': config('CLOUDINARY_API_KEY'),
+    'API_SECRET': config('CLOUDINARY_API_SECRET')
 }
 
 MEDIA_URL = '/media/'  # or any prefix you choose
