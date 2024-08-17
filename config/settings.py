@@ -54,6 +54,8 @@ INSTALLED_APPS = [
     'django_filters',
     'decouple',
     'drf_yasg',
+    'cloudinary',
+    'cloudinary_storage',
 
     #auth
     'rest_framework.authtoken',
@@ -227,37 +229,20 @@ CORS_ALLOW_CREDENTIALS = True  # Позволяет использование �
 # CORS_ALLOW_ALL_ORIGINS = True
 
 
+#cloudinary
+
 import cloudinary
 # Import the cloudinary.api for managing assets
 import cloudinary.api
 # Import the cloudinary.uploader for uploading assets
 import cloudinary.uploader
 
-cloudinary.config(
-    cloud_name="dpjm0tsmq",
-    api_key="388678142341313",
-    api_secret=config('SECRET_KEY'),
-    secure=True,
-)
 
-from dotenv import load_dotenv
-load_dotenv()
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': 'dpjm0tsmq',
+    'API_KEY': '388678142341313',
+    'API_SECRET': '0ecNShLjktMNc7pfaOvR1ET72TA'
+}
 
-# Import the Cloudinary libraries
-# ==============================
-import cloudinary
-from cloudinary import CloudinaryImage
-import cloudinary.uploader
-import cloudinary.api
-
-# Import to format the JSON responses
-# ==============================
-import json
-
-# Set configuration parameter: return "https" URLs by setting secure=True
-# ==============================
-config = cloudinary.config(secure=True)
-
-# Log the configuration
-# ==============================
-print("****1. Set up and configure the SDK:****\nCredentials: ", config.cloud_name, config.api_key, "\n")
+MEDIA_URL = '/media/'  # or any prefix you choose
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'

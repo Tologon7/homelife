@@ -1,5 +1,7 @@
 from django.db import models
 from config import settings
+from cloudinary.models import CloudinaryField
+
 
 
 class Category(models.Model):
@@ -25,7 +27,7 @@ class Color(models.Model):
 
 class Product(models.Model):
     title = models.CharField(max_length=255)
-    img = models.ImageField()
+    image = models.ImageField(upload_to='images/', blank=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products', null=True, blank=True)
     color = models.ForeignKey(Color, on_delete=models.CASCADE, null=True, blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
