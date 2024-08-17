@@ -197,7 +197,7 @@ class ProductNewlView(generics.ListCreateAPIView):
 
 
 class ProductCreateView(generics.ListCreateAPIView):
-    queryset = Product.objects.all()
+    queryset = Product.objects.filter(id=1)
     serializer_class = ProductCreateSerializer
 
     @swagger_auto_schema(
