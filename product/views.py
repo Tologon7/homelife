@@ -1,3 +1,8 @@
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.pagination import PageNumberPagination
 from rest_framework import generics
 # from .models import Category, Color, Product, Rating
 from .serializers import CategorySerializer, ColorSerializer, ProductSerializer
@@ -8,6 +13,35 @@ from .pagination import CustomPagination
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated
 from product.serializers import *
+
+
+class HomepageView(APIView):
+
+    def get(self, request, *args, **kwargs):
+        new_products = Product.objects.all().order_by('-id')
+        promotion_products = Product.objects.filter(promotion__isnull=False)
+        popular_products = Product.objects.filter(id=1)
+
+        new_serializer = ProductSerializer(new_products, many=True)
+        promotion_serializer = ProductSerializer(promotion_products, many=True)
+        popular_serializer = ProductSerializer(popular_products, many=True)
+
+        response_data = {
+            "homepage": {
+                "promotion": promotion_serializer.data,
+                "popular": popular_serializer.data,
+                "new": new_serializer.data
+            }
+        }
+
+        return Response(response_data, status=status.HTTP_200_OK)
+
+    def post(self, request, *args, **kwargs):
+        serializer = ProductSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class CategoryListCreateView(generics.ListCreateAPIView):
@@ -122,28 +156,6 @@ class ProductListView(generics.ListCreateAPIView):
         return super().post(request, *args, **kwargs)
 
 
-# class ProductListCreateViewID(generics.ListCreateAPIView):
-#     queryset = Product.objects.all()
-#     serializer_class = ProductSerializer
-#     filter_backends = [DjangoFilterBackend]
-#     filterset_class = ProductFilter
-#
-#     @swagger_auto_schema(
-#         tags=['product'],
-#         operation_description="Этот эндпоинт позволяет получить список продуктов по product_id и создать новый продукт."
-#     )
-#     def get(self, request, *args, **kwargs):
-#         return super().get(request, *args, **kwargs)
-#
-#     @swagger_auto_schema(
-#         tags=['product'],
-#         operation_description="Этот эндпоинт позволяет создать новый продукт."
-#     )
-#     def post(self, request, *args, **kwargs):
-#         return super().post(request, *args, **kwargs)
-#
-#     def get_queryset(self):
-#         return Product.objects.filter(product_id=self.kwargs["product_id"])
 
 
 class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -194,6 +206,30 @@ class ProductNewlView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         return Product.objects.all().order_by('-id')
+
+
+class ProductPromotionView(generics.ListAPIView):
+    queryset = Product.objects.filter(promotion__isnull=False)
+    serializer_class = ProductSerializer
+
+    @swagger_auto_schema(
+        tags=['product'],
+        operation_description="Этот эндпоинт позволяет получить список товаров с акциями."
+    )
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
+
+
+class ProductPopularView(generics.ListCreateAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductCreateSerializer
+
+    @swagger_auto_schema(
+        tags=['product'],
+        operation_description="Этот эндпоинт позволяет получить список популярных товаров."
+    )
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
 
 
 class ProductCreateView(generics.ListCreateAPIView):
