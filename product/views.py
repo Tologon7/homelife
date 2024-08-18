@@ -13,6 +13,9 @@ from product.serializers import *
 
 
 class HomepageView(APIView):
+    # filter_backends = [DjangoFilterBackend]
+    # filterset_class = ProductFilter
+
     def get(self, request, *args, **kwargs):
         new_products = Product.objects.all().order_by('-id')
         promotion_products = Product.objects.filter(promotion__isnull=False)
@@ -197,8 +200,6 @@ class ProductListView(generics.ListCreateAPIView):
         return super().post(request, *args, **kwargs)
 
 
-
-
 class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
@@ -229,6 +230,8 @@ class ProductNewlView(generics.ListCreateAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     pagination_class = CustomPagination
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = ProductFilter
 
 
     @swagger_auto_schema(
@@ -252,6 +255,8 @@ class ProductNewlView(generics.ListCreateAPIView):
 class ProductPromotionView(generics.ListAPIView):
     queryset = Product.objects.filter(promotion__isnull=False)
     serializer_class = ProductSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = ProductFilter
 
     @swagger_auto_schema(
         tags=['product'],
@@ -264,6 +269,8 @@ class ProductPromotionView(generics.ListAPIView):
 class ProductPopularView(generics.ListCreateAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductCreateSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = ProductFilter
 
     @swagger_auto_schema(
         tags=['product'],
