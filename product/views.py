@@ -17,19 +17,22 @@ class HomepageView(APIView):
     # filterset_class = ProductFilter
 
     def get(self, request, *args, **kwargs):
+        product_of_the_day = Product.objects.filter(is_product_of_the_day=True).first()
         new_products = Product.objects.all().order_by('-id')
         promotion_products = Product.objects.filter(promotion__isnull=False)
         popular_products = Product.objects.filter(id=1)
 
+        product_of_the_day_serializer = ProductSerializer(product_of_the_day)
         new_serializer = ProductSerializer(new_products, many=True)
         promotion_serializer = ProductSerializer(promotion_products, many=True)
         popular_serializer = ProductSerializer(popular_products, many=True)
 
         response_data = {
             "homepage": {
+                "product_of_the_day": product_of_the_day_serializer.data if product_of_the_day else None,
                 "promotion": promotion_serializer.data,
                 "popular": popular_serializer.data,
-                "new": new_serializer.data
+                "new": new_serializer.data,
             }
         }
 

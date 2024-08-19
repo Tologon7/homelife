@@ -36,6 +36,7 @@ class Product(models.Model):
     brand = models.ForeignKey(Brand, on_delete=models.CASCADE, related_name='products')
     quantity = models.IntegerField()
     description = models.TextField(max_length=2551)
+    is_product_of_the_day = models.BooleanField(default=False)
 
     def __str__(self):
         return self.title

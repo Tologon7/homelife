@@ -21,13 +21,25 @@ class BrandSerializer(serializers.ModelSerializer):
 
 
 class ProductSerializer(serializers.ModelSerializer):
-    category = CategorySerializer()
-    color = ColorSerializer()
-    brand = BrandSerializer()
+    category = CategorySerializer(read_only=True)
+    color = ColorSerializer(read_only=True)
+    brand = BrandSerializer(read_only=True)
 
     class Meta:
         model = Product
-        fields = ['id', 'title', 'category', 'color', 'image', 'price', 'promotion', 'brand', 'quantity', 'description']
+        fields = [
+            'id',
+            'title',
+            'category',
+            'color',
+            'image',
+            'price',
+            'promotion',
+            'brand',
+            'quantity',
+            'description',
+            'is_product_of_the_day'
+        ]
 
     def create(self, validated_data):
         category_data = validated_data.pop('category')
@@ -52,4 +64,16 @@ class ProductSerializer(serializers.ModelSerializer):
 class ProductCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = '__all__'
+        fields = [
+            'id',
+            'title',
+            'category',
+            'color',
+            'image',
+            'price',
+            'promotion',
+            'brand',
+            'quantity',
+            'description',
+            'is_product_of_the_day'
+        ]
