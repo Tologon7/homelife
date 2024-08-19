@@ -3,7 +3,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from users.models import *
 from rest_framework import generics, exceptions
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.response import Response
@@ -23,6 +23,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
+from decouple import config
 
 
 class UserMeView(generics.RetrieveAPIView):
@@ -78,7 +79,6 @@ class UserRegisterView(generics.CreateAPIView):
                               "После успешной регистрации, система создает "
                               "новую запись пользователя и возвращает информацию о нем.",
     )
-
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
@@ -104,7 +104,6 @@ class UserLoginView(TokenObtainPairView):
                               "доступа к защищенным ресурсам. \nСрок действия 'access' токена - "
                               "60 минут, а refresh токена - 30 дней.",
     )
-
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
@@ -268,3 +267,21 @@ class ChangePasswordView(generics.UpdateAPIView):
         return Response({
             'message': 'The password has been successfully changed.'
         }, status=status.HTTP_200_OK)
+
+
+class UserListView(generics.ListAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserListSerializer
+    permission_classes = [IsAdminUser]
+
+    @swagger_auto_schema(
+        tags=['User'],
+        operation_description="Этот эндпоинт предоставляет администраторам"
+                              " возможность получить список всех"
+                              " аутентифицированных пользователей.",
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    def get_queryset(self):
+        return User.objects.all().order_by('-id')

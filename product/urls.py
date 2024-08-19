@@ -12,10 +12,10 @@ urlpatterns = [
     path('all/', ProductListView.as_view(), name='product-all'),
     path('<int:pk>/', ProductDetailView.as_view(), name='product-detail'),
     path('create/', ProductCreateView.as_view(), name='product-create'),
-    path('new/', ProductNewlView.as_view(), name='product-new'),
+    path('new/', ProductNewView.as_view(), name='product-new'),
     path('popular/', ProductPopularView.as_view(), name='product-popular'),
     path('promotions/', ProductPromotionView.as_view(), name='product-promotions'),
-    path('day/', ProductDayView.as_view(), name='product-of-the-day'),
+    # path('day/', ProductDayView.as_view(), name='product-of-the-day'),
     path('review/', ReviewCreateView.as_view(), name='create-review'),
     path('review/<int:pk>/', ReviewDetailView.as_view(), name='review-detail'),
 ]

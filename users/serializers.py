@@ -226,3 +226,9 @@ class ChangePasswordSerializer(serializers.ModelSerializer, PasswordMixin):
     class Meta:
         model = User
         fields = ['old_password', 'password', 'confirm_password']
+
+
+class UserListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = '__all__'
