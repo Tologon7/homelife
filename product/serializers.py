@@ -20,10 +20,17 @@ class BrandSerializer(serializers.ModelSerializer):
         fields = ["title"]
 
 
+class ReviewSummarySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Review
+        fields = ['id', 'rating', 'comments']
+
+
 class ProductSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
     color = ColorSerializer(read_only=True)
     brand = BrandSerializer(read_only=True)
+    reviews = ReviewSummarySerializer(many=True, read_only=True)
 
     class Meta:
         model = Product
@@ -38,7 +45,8 @@ class ProductSerializer(serializers.ModelSerializer):
             'brand',
             'quantity',
             'description',
-            'is_product_of_the_day'
+            'is_product_of_the_day',
+            'reviews',
         ]
 
     def create(self, validated_data):
@@ -77,3 +85,25 @@ class ProductCreateSerializer(serializers.ModelSerializer):
             'description',
             'is_product_of_the_day'
         ]
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+
+    product_title = serializers.SerializerMethodField()
+    user_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Review
+        fields = ['id', 'product', 'product_title', 'user', 'user_name', 'comments', 'rating', 'created', 'updated']
+
+    def get_product_title(self, obj):
+        return obj.product.title if obj.product else 'unknown'
+
+    def get_user_name(self, obj):
+        return obj.user.first_name if obj.user else 'unknown'
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation.pop('product', None)
+        representation.pop('user', None)
+        return representation

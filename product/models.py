@@ -2,7 +2,8 @@ from django.db import models
 from config import settings
 from cloudinary.models import CloudinaryField
 from decimal import Decimal, InvalidOperation
-
+from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.exceptions import ValidationError
 
 class Category(models.Model):
     title = models.CharField(max_length=200)
@@ -40,3 +41,41 @@ class Product(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class Review(models.Model):
+
+    RATING_CHOICES = [
+        (1, '1 star'),
+        (1.5, '1.5 star'),
+        (2, '2 star'),
+        (2.5, '2.5 star'),
+        (3, '3 star'),
+        (3.5, '3.5 star'),
+        (4, '4 star'),
+        (4.5, '4.5 star'),
+        (5, '5 star'),
+    ]
+
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="reviews", verbose_name="Product")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name="User")
+    comments = models.TextField(verbose_name="Comments", blank=True, null=True)
+    rating = models.FloatField(
+        choices=RATING_CHOICES,
+        validators=[
+            MinValueValidator(1),
+            MaxValueValidator(5)
+        ],
+        verbose_name="Rating"
+    )
+    created = models.DateTimeField(auto_now_add=True, verbose_name="Date Created")
+    updated = models.DateTimeField(auto_now=True, verbose_name="Date Updated")
+
+    def clean(self):
+        super().clean()  # Always call the parent class's `clean` method.
+        # Дополнительная проверка на корректность рейтинга (можно убрать, если используется только choices)
+        if self.rating not in dict(self.RATING_CHOICES).keys():
+            raise ValidationError("Invalid rating value. It must be one of the predefined choices.")
+
+    def __str__(self):
+        return f'Review by {self.user} for {self.product} - Rating: {self.rating}'

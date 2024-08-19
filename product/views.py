@@ -293,3 +293,28 @@ class ProductCreateView(generics.ListCreateAPIView):
     )
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
+
+
+class ProductDayView(generics.ListAPIView):
+    queryset = Product.objects.filter(is_product_of_the_day=True).first()
+    serializer_class = ProductSerializer
+
+    @swagger_auto_schema(
+        tags=['product'],
+        operation_description="Этот эндпоинт позволяет получить товар дня."
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+
+class ReviewCreateView(generics.CreateAPIView):
+    queryset = Review.objects.all()
+    serializer_class = ReviewSerializer
+
+
+class ReviewDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Review.objects.all()
+    serializer_class = ReviewSerializer
+
+    def get_queryset(self):
+        return Review.objects.filter(id=self.kwargs.get('pk'))
