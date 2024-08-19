@@ -5,11 +5,17 @@ from rest_framework.permissions import IsAuthenticated
 from .models import Cart, CartItem
 from product.models import Product
 from .serializers import CartSerializer, CartItemsSerializer
+from drf_yasg.utils import swagger_auto_schema
 
 
 class CartView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @swagger_auto_schema(
+        tags=['cart'],
+        operation_description="Этот эндпоинт позволяет получить список элементов," 
+                              "которые есть в корзине в корзине пользователя."
+    )
     def get(self, request):
         user = request.user
         cart = Cart.objects.filter(user=user, ordered=False).first()
@@ -17,6 +23,11 @@ class CartView(APIView):
         serializer = CartItemsSerializer(queryset, many=True)
         return Response(serializer.data)
 
+    @swagger_auto_schema(
+        tags=['cart'],
+        operation_description="Этот эндпоинт позволяет добавить определенный товар,"
+                              "в корзину пользователя."
+    )
     def post(self, request):
         data = request.data
         user = request.user
@@ -37,6 +48,11 @@ class CartView(APIView):
         cart.save()
         return Response({'success': 'Item Added to your cart'})
 
+    @swagger_auto_schema(
+        tags=['cart'],
+        operation_description="Этот эндпоинт позволяет изменить/обновить товар,"
+                              "который находится в корзине в корзине пользователя."
+    )
     def put(self, request):
         data = request.data
         cart_item = CartItem.objects.get(id=data.get('id'))
@@ -45,6 +61,11 @@ class CartView(APIView):
         cart_item.save()
         return Response({'success': 'product updated'})
 
+    @swagger_auto_schema(
+        tags=['cart'],
+        operation_description="Этот эндпоинт позволяет удалить товар,"
+                              "с корзины пользователя."
+    )
     def delete(self, request):
         user = request.user
         data = request.data

@@ -16,6 +16,10 @@ class HomepageView(APIView):
     # filter_backends = [DjangoFilterBackend]
     # filterset_class = ProductFilter
 
+    @swagger_auto_schema(
+        tags=['product'],
+        operation_description="Это эндпоинт главной страницы."
+    )
     def get(self, request, *args, **kwargs):
         product_of_the_day = Product.objects.filter(is_product_of_the_day=True).first()
         new_products = Product.objects.all().order_by('-id')
@@ -311,10 +315,24 @@ class ReviewCreateView(generics.CreateAPIView):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
 
+    @swagger_auto_schema(
+        tags=['review'],
+        operation_description="Этот эндпоинт позволяет создать комментарий и оставить рейтинг."
+    )
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
+
 
 class ReviewDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
+
+    @swagger_auto_schema(
+        tags=['review'],
+        operation_description="Этот эндпоинт позволяет получить определенный комменарий по id."
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
 
     def get_queryset(self):
         return Review.objects.filter(id=self.kwargs.get('pk'))
