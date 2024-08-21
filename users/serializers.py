@@ -10,7 +10,12 @@ from rest_framework import serializers
 from users.models import User, OTP
 import re
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-
+from django.core.mail import send_mail
+from django.contrib.auth.hashers import make_password
+from django.contrib.auth import get_user_model
+import random
+from datetime import timedelta
+from django.utils import timezone
 
 
 class PasswordMixinRegister(serializers.Serializer):
@@ -109,7 +114,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
 
 # register
-class UserRegistrationSerializer(serializers.ModelSerializer, PasswordMixinRegister):
+class UserRegistrationSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
         validators=[
             RegexValidator(
@@ -121,40 +126,77 @@ class UserRegistrationSerializer(serializers.ModelSerializer, PasswordMixinRegis
         max_length=20,
         required=False
     )
-
     password = serializers.CharField(write_only=True)
     wholesaler = serializers.BooleanField(required=False, default=False)
 
     class Meta:
-        model = get_user_model()
+        model = User
         fields = ['first_name', 'last_name', 'gender', 'age', 'email', 'username', 'number', 'wholesaler', 'password']
 
     def create(self, validated_data):
-        user = get_user_model().objects.create_user(
-            email=validated_data['email'],
-            password=validated_data['password'],
-            first_name=validated_data.get('first_name', ''),
-            last_name=validated_data.get('last_name', ''),
-            gender=validated_data.get('gender', ''),
-            age=validated_data.get('age', ''),
-            username=validated_data.get('username', ''),
-            number=validated_data.get('number', 0),
-            wholesaler=validated_data.get('wholesaler', False),
+        wholesaler = validated_data.pop('wholesaler', False)
+        password = validated_data.pop('password')
+
+        otp_code = None
+        if wholesaler:
+            otp_code = str(random.randint(100000, 999999))
+            validated_data['is_active'] = False  # Деактивируем пользователя до верификации
+            validated_data['otp_code'] = otp_code
+            validated_data['otp_created_at'] = timezone.now()
+
+            # Отправка OTP-кода на администраторский email
+            send_mail(
+                'New Wholesaler Registration Request',
+                f"User {validated_data['first_name']} {validated_data['last_name']} has requested to register as a wholesaler.\nemail: {validated_data['email']}\ncontact number: {validated_data['number']}\nOTP Code: {otp_code}",
+                'email',  # Замените на ваш email
+                ['homelife.site.kg@gmail.com'],  # Замените на email администратора
+                fail_silently=False,
+            )
+
+        user = User.objects.create(
+            password=make_password(password),
+            wholesaler=wholesaler,
+            **validated_data
         )
+
         return user
 
-    def get_tokens_for_user(self, user):
-        refresh = RefreshToken.for_user(user)
-        return {
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
-        }
 
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        tokens = self.get_tokens_for_user(instance)
-        representation['tokens'] = tokens
-        return representation
+class WholesalerOTPVerificationSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    otp_code = serializers.CharField(max_length=6)
+
+    def validate(self, attrs):
+        email = attrs.get('email')
+        otp_code = attrs.get('otp_code')
+
+        try:
+            user = User.objects.get(email=email, is_active=False, wholesaler=True)
+        except User.DoesNotExist:
+            raise serializers.ValidationError('Invalid email or this account is not pending activation.')
+
+        # Проверка срока действия OTP
+        if user.otp_created_at is None:
+            raise serializers.ValidationError('OTP code was not created or is invalid.')
+
+        otp_lifetime = timedelta(days=3)  # Время жизни OTP: 3 дня
+        if timezone.now() > user.otp_created_at + otp_lifetime:
+            raise serializers.ValidationError('OTP code has expired.')
+
+        # Проверка OTP-кода
+        if not user.otp_code or user.otp_code != otp_code:
+            raise serializers.ValidationError('Invalid OTP code.')
+
+        attrs['user'] = user
+        return attrs
+
+    def create(self, validated_data):
+        user = validated_data.get('user')
+        user.is_active = True  # Активируем пользователя
+        user.otp_code = None  # Очистка OTP после успешной верификации
+        user.otp_created_at = None  # Очистка времени создания OTP
+        user.save()
+        return user
 
 
 class UserLoginSerializer(TokenObtainPairSerializer):
@@ -231,4 +273,19 @@ class ChangePasswordSerializer(serializers.ModelSerializer, PasswordMixin):
 class UserListSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = '__all__'
+        fields = [
+            "id",
+            "password",
+            "last_login",
+            "is_superuser",
+            "username",
+            "first_name",
+            "last_name",
+            "age",
+            "email",
+            "number",
+            "wholesaler",
+            "is_active",
+            "is_staff",
+            "gender",
+        ]

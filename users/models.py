@@ -7,6 +7,7 @@ from django.contrib.auth.models import (
     BaseUserManager,
     PermissionsMixin,
 )
+from datetime import timedelta
 
 
 class CustomUserManager(BaseUserManager):
@@ -43,6 +44,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     wholesaler = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
+
+    #for wholesaler
+    otp_code = models.CharField(max_length=6, null=True, blank=True)
+    otp_created_at = models.DateTimeField(null=True, blank=True)
 
     objects = CustomUserManager()
 
