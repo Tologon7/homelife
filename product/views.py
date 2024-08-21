@@ -4,6 +4,7 @@ from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import generics
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter
 from .filters import ProductFilter
 from drf_yasg.utils import swagger_auto_schema
 from .pagination import CustomPagination
@@ -283,8 +284,9 @@ class ProductPromotionView(generics.ListAPIView):
 class ProductPopularView(generics.ListAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductCreateSerializer
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_class = ProductFilter
+    search_fields = ['title', 'price', 'promotion', 'description']
 
     @swagger_auto_schema(
         tags=['product'],

@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from users.models import *
@@ -73,19 +74,46 @@ class UserRegisterView(generics.CreateAPIView):
 
     @swagger_auto_schema(
         tags=['Authentication'],
-        operation_description="Этот эндпоинт предоставляет "
-                              "возможность пользователям зарегистрироваться "
-                              "в системе, предоставив необходимые данные. "
+        operation_description="Этот эндпоинт предоставляет возможность пользователям "
+                              "зарегистрироваться в системе, предоставив необходимые данные. "
                               "После успешной регистрации, система создает "
-                              "новую запись пользователя и возвращает информацию о нем.",
+                              "новую запись пользователя и возвращает информацию о нем. "
+                              "Если пользователь попытался войти как оптовый клиент, "
+                              "тогда на email администратора придет 6-и значный код, "
+                              "который пользователь должен ввести в эндпоинте /users/wholesaler-otp/ "
+                              "вместе со своим email, после этого пользователь может зарегистрироваться "
+                              "как оптовый клиент. ",
     )
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
-            tokens = serializer.get_tokens_for_user(user)
+            if user.wholesaler and user.otp_code:
+                return Response(
+                    {'message': 'OTP has been sent to the admin. Please provide the OTP to complete registration.'},
+                    status=status.HTTP_200_OK
+                )
+            else:
+                user_data = UserRegistrationSerializer(user).data
+                return Response({'user': user_data}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class WholesalerOTPVerificationView(APIView):
+    @swagger_auto_schema(
+        tags=['Authentication'],
+        operation_description="Этот эндпоинт позволяет оптовым пользователям"
+                              " завершить регистрацию, предоставив полученный"
+                              " от администратора OTP-код.",
+
+        request_body=WholesalerOTPVerificationSerializer,
+        responses={200: 'Registration completed successfully.', 400: 'Invalid OTP code or email.'}
+    )
+    def post(self, request, *args, **kwargs):
+        serializer = WholesalerOTPVerificationSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
             user_data = UserRegistrationSerializer(user).data
-            user_data['tokens'] = tokens
             return Response({'user': user_data}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -272,7 +300,7 @@ class ChangePasswordView(generics.UpdateAPIView):
 class UserListView(generics.ListAPIView):
     queryset = User.objects.all()
     serializer_class = UserListSerializer
-    permission_classes = [IsAdminUser]
+    # permission_classes = [IsAdminUser]
 
     @swagger_auto_schema(
         tags=['User'],
@@ -284,4 +312,4 @@ class UserListView(generics.ListAPIView):
         return super().get(request, *args, **kwargs)
 
     def get_queryset(self):
-        return User.objects.all().order_by('-id')
+        return User.objects.all().order_by('-id').filter(is_active=False)
