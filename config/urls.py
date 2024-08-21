@@ -3,7 +3,6 @@ from django.urls import path
 from django.urls import path, include
 from config import settings
 from django.conf.urls.static import static
-
 from django.urls import re_path
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
@@ -32,23 +31,9 @@ urlpatterns = [
     path('users/', include('users.urls')),
     path('cart/', include('cart.urls')),
 
-    #auth
-    # path('auth/', include('dj_rest_auth.urls')),
-    # path('auth/registration/', include('dj_rest_auth.registration.urls')),
-
-
+    #swagger
     path('swagger<format>/', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 
 ]
-
-
-# if settings.DEBUG:
-#     import debug_toolbar
-#
-#     urlpatterns = [
-#         path('__debug__/', include(debug_toolbar.urls)),
-#     ] + urlpatterns
-#
-#     urlpatterns += static(settings.MEDIA.URL, document_root=settings.MEDIA_ROOT)
