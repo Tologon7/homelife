@@ -312,4 +312,4 @@ class UserListView(generics.ListAPIView):
         return super().get(request, *args, **kwargs)
 
     def get_queryset(self):
-        return User.objects.all().order_by('-id').filter(is_active=False)
+        return User.objects.all().order_by('-id').filter(is_active=True)

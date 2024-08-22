@@ -16,6 +16,10 @@ from product.models import *
 
 
 class HomepageView(APIView):
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    filterset_class = ProductFilter
+    search_fields = ['title', 'price', 'promotion', 'description']
+
     @swagger_auto_schema(
         tags=['product'],
         operation_description="Этот эндпоинт возвращает данные для главной страницы, "
@@ -205,8 +209,9 @@ class ProductListView(generics.ListAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductShortSerializer
     pagination_class = CustomPagination
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_class = ProductFilter
+    search_fields = ['title', 'price', 'promotion', 'description']
 
     @swagger_auto_schema(
         tags=['product'],
@@ -245,12 +250,14 @@ class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
     def delete(self, request, *args, **kwargs):
         return super().delete(request, *args, **kwargs)
 
+
 class ProductNewView(generics.ListAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductShortSerializer
     pagination_class = CustomPagination
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_class = ProductFilter
+    search_fields = ['title', 'price', 'promotion', 'description']
 
     @swagger_auto_schema(
         tags=['product'],
@@ -294,31 +301,27 @@ class ProductPromotionView(generics.ListAPIView):
 
 class ProductPopularView(generics.ListAPIView):
     serializer_class = ProductShortSerializer
-    pagination_class = CustomPagination
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_class = ProductFilter
+    search_fields = ['title', 'price', 'promotion', 'description']
 
     @swagger_auto_schema(
         tags=['product'],
         operation_description="Этот эндпоинт позволяет получить список популярных продуктов (только те, у которых есть отзывы)."
     )
-    def get(self, request, *args, **kwargs):
+    def get_queryset(self):
         # Получаем популярные продукты с аннотациями
-        popular_products = Product.objects.annotate(
+        return Product.objects.annotate(
             review_count=Count('reviews'),
             avg_rating=Avg('reviews__rating')  # Средний рейтинг
         ).filter(
             review_count__gt=0
         ).order_by('-avg_rating')  # Сортируем только по avg_rating
 
-        # Применяем пагинацию
-        page = self.paginate_queryset(popular_products)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
-        # В случае отсутствия пагинации
-        serializer = self.get_serializer(popular_products, many=True)
+    def get(self, request, *args, **kwargs):
+        # Используем `get_queryset` для получения данных
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
