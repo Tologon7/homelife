@@ -32,12 +32,6 @@ class HomepageView(APIView):
             review_count__gt=0
         ).order_by('-avg_rating')[:8]
 
-        product_of_the_day_serializer = ProductShortSerializer(product_of_the_day)
-        new_serializer = ProductShortSerializer(new_products, many=True)
-        promotion_serializer = ProductShortSerializer(promotion_products, many=True)
-        popular_serializer = ProductShortSerializer(popular_products, many=True)
-
-        # Сериализация данных
         response_data = {
             "homepage": {
                 "product_of_the_day": self.serialize_product(product_of_the_day),
@@ -222,21 +216,18 @@ class ProductListView(generics.ListAPIView):
 class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-
     @swagger_auto_schema(
         tags=['product'],
         operation_description="Этот эндпоинт позволяет получить, обновить или удалить продукт по ID."
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
-
     @swagger_auto_schema(
         tags=['product'],
         operation_description="Этот эндпоинт позволяет обновить продукт по ID."
     )
     def put(self, request, *args, **kwargs):
         return super().put(request, *args, **kwargs)
-
     @swagger_auto_schema(
         tags=['product'],
         operation_description="Этот эндпоинт позволяет удалить продукт по ID."
@@ -244,14 +235,12 @@ class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
     def delete(self, request, *args, **kwargs):
         return super().delete(request, *args, **kwargs)
 
-
 class ProductNewView(generics.ListAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductShortSerializer
     pagination_class = CustomPagination
     filter_backends = [DjangoFilterBackend]
     filterset_class = ProductFilter
-
 
     @swagger_auto_schema(
         tags=['product'],

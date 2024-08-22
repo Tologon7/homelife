@@ -28,12 +28,23 @@ class ReviewSummarySerializer(serializers.ModelSerializer):
         fields = ['id', 'rating', 'comments']
 
 
+# class ImageSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Product
+#         fields = [
+#             'image1',
+#             'image2',
+#             'image3'
+#         ]
+
+
 class ProductSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
     color = ColorSerializer(read_only=True)
     brand = BrandSerializer(read_only=True)
     reviews = ReviewSummarySerializer(many=True, read_only=True)
     avg_rating = serializers.SerializerMethodField()
+    # images = ImageSerializer(read_only=True)
 
     class Meta:
         model = Product
@@ -42,7 +53,9 @@ class ProductSerializer(serializers.ModelSerializer):
             'title',
             'category',
             'color',
-            'image',
+            'image1',
+            'image2',
+            'image3',
             'price',
             'promotion',
             'brand',
@@ -61,6 +74,30 @@ class ProductSerializer(serializers.ModelSerializer):
         return 0
 
 
+class ProductShortSerializer(serializers.ModelSerializer):
+    avg_rating = serializers.SerializerMethodField()
+    # images = ImageSerializer(read_only=True)
+
+    class Meta:
+        model = Product
+        fields = [
+            'id',
+            'image1',
+            'image2',
+            'image3',
+            'avg_rating',
+            'title',
+            'price',
+            'promotion',
+        ]
+
+    def get_avg_rating(self, obj):
+        if obj.reviews.exists():
+            avg_rating = obj.reviews.aggregate(Avg('rating'))['rating__avg']
+            return round_to_nearest_half(avg_rating)
+        return 0
+
+
 class ProductCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
@@ -69,7 +106,9 @@ class ProductCreateSerializer(serializers.ModelSerializer):
             'title',
             'category',
             'color',
-            'image',
+            'image1',
+            'image2',
+            'image3',
             'price',
             'promotion',
             'brand',
@@ -92,7 +131,17 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Review
-        fields = ['id', 'product', 'product_title', 'user', 'user_name', 'comments', 'rating', 'created', 'updated']
+        fields = [
+            'id',
+            'product',
+            'product_title',
+            'user',
+            'user_name',
+            'comments',
+            'rating',
+            'created',
+            'updated'
+        ]
 
     def get_product_title(self, obj):
         return obj.product.title if obj.product else 'unknown'
@@ -100,30 +149,8 @@ class ReviewSerializer(serializers.ModelSerializer):
     def get_user_name(self, obj):
         return obj.user.first_name if obj.user else 'unknown'
 
-
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         representation.pop('product', None)
         representation.pop('user', None)
         return representation
-
-
-class ProductShortSerializer(serializers.ModelSerializer):
-    avg_rating = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Product
-        fields = [
-            'id',
-            'image',
-            'avg_rating',
-            'title',
-            'price',
-            'promotion',
-        ]
-
-    def get_avg_rating(self, obj):
-        if obj.reviews.exists():
-            avg_rating = obj.reviews.aggregate(Avg('rating'))['rating__avg']
-            return round_to_nearest_half(avg_rating)
-        return 0
