@@ -25,6 +25,10 @@ class HomepageView(APIView):
         operation_description="Этот эндпоинт возвращает данные для главной страницы, "
                               "включая товар дня, новые товары, "
                               "товары со скидками и популярные товары."
+                              "Для выбора товрав дня, надо найти товар который "
+                              "мы хотим сделать товаром дня, и надо обновить "
+                              "как product_of_the_day = True, после этого, "
+                              "этот товар будет товаром дня "
     )
     def get(self, request, *args, **kwargs):
         banner = Banner.objects.filter(id=1).first()
@@ -215,17 +219,10 @@ class ProductListView(generics.ListAPIView):
 
     @swagger_auto_schema(
         tags=['product'],
-        operation_description="Этот эндпоинт позволяет получить список всех продуктов и создать новый продукт."
+        operation_description="Этот эндпоинт позволяет получить список всех продуктов."
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
-
-    @swagger_auto_schema(
-        tags=['product'],
-        operation_description="Этот эндпоинт позволяет создать новый продукт."
-    )
-    def post(self, request, *args, **kwargs):
-        return super().post(request, *args, **kwargs)
 
 
 class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -265,13 +262,6 @@ class ProductNewView(generics.ListAPIView):
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
-
-    @swagger_auto_schema(
-        tags=['product'],
-        operation_description="Этот эндпоинт позволяет создать новый продукт."
-    )
-    def post(self, request, *args, **kwargs):
-        return super().post(request, *args, **kwargs)
 
     def get_queryset(self):
         return Product.objects.all().order_by('-id')
@@ -335,18 +325,6 @@ class ProductCreateView(generics.CreateAPIView):
     )
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
-
-
-# class ProductDayView(generics.ListAPIView):
-#     queryset = Product.objects.filter(is_product_of_the_day=True).first()
-#     serializer_class = ProductSerializer
-#
-#     @swagger_auto_schema(
-#         tags=['product'],
-#         operation_description="Этот эндпоинт позволяет получить товар дня."
-#     )
-#     def get(self, request, *args, **kwargs):
-#         return super().get(request, *args, **kwargs)
 
 
 class ReviewCreateView(generics.CreateAPIView):
