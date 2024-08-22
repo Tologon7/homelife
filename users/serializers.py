@@ -146,8 +146,8 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
             # Отправка OTP-кода на администраторский email
             send_mail(
-                'New Wholesaler Registration Request',
-                f"User {validated_data['first_name']} {validated_data['last_name']} has requested to register as a wholesaler.\nemail: {validated_data['email']}\ncontact number: {validated_data['number']}\nOTP Code: {otp_code}",
+                'Новый ОПТОВЫЙ ПОКУПАТЕЛЬ!',
+                f"Имя: {validated_data['first_name']} {validated_data['last_name']} хочет зарегестрироваться как новый оптовик.\nEmail: {validated_data['email']}\nНомер телефона: {validated_data['number']}\nКод: {otp_code}",
                 'email',  # Замените на ваш email
                 ['homelife.site.kg@gmail.com'],  # Замените на email администратора
                 fail_silently=False,

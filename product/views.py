@@ -11,7 +11,8 @@ from .pagination import CustomPagination
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated
 from product.serializers import *
-from django.db.models import Count,Avg
+from django.db.models import Count, Avg
+from product.models import *
 
 
 class HomepageView(APIView):
@@ -22,6 +23,7 @@ class HomepageView(APIView):
                               "товары со скидками и популярные товары."
     )
     def get(self, request, *args, **kwargs):
+        banner = Banner.objects.filter(id=1).first()
         product_of_the_day = Product.objects.filter(is_product_of_the_day=True).first()
         new_products = Product.objects.all().order_by('-id')[:4]
         promotion_products = Product.objects.filter(promotion__isnull=False)[:4]
@@ -34,6 +36,7 @@ class HomepageView(APIView):
 
         response_data = {
             "homepage": {
+                "banner": self.serialize_banner(banner),
                 "product_of_the_day": self.serialize_product(product_of_the_day),
                 "promotion": self.serialize_products(promotion_products),
                 "popular": self.serialize_products(popular_products),
@@ -42,6 +45,13 @@ class HomepageView(APIView):
         }
 
         return Response(response_data, status=status.HTTP_200_OK)
+
+    def serialize_banner(self, banner):
+        if banner:
+            # Предположим, у вас есть сериализатор для модели Banner
+            serializer = BannerSerializer(banner)
+            return serializer.data
+        return None
 
     def serialize_product(self, product):
         if product:
@@ -361,3 +371,19 @@ class ReviewDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         return Review.objects.filter(id=self.kwargs.get('pk'))
+
+
+class BannerView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Banner.objects.all()
+    serializer_class = BannerSerializer
+
+    @swagger_auto_schema(
+        tags=['banner'],
+        operation_description="Этот эндпоинт позволяет получить, обновить или удалить баннер для главное страницы."
+    )
+    def get_object(self):
+        # Получаем первый объект, либо создаем его, если он не существует
+        obj, created = Banner.objects.get_or_create(id=1)
+        return obj
+
+

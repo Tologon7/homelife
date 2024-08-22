@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.db.models import Avg
-from .models import Product, Category, Color, Brand, Review
+from .models import Product, Category, Color, Brand, Review, Banner
 from .utils import round_to_nearest_half
 
 
@@ -154,3 +154,9 @@ class ReviewSerializer(serializers.ModelSerializer):
         representation.pop('product', None)
         representation.pop('user', None)
         return representation
+
+
+class BannerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Banner
+        fields = '__all__'

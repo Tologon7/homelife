@@ -58,9 +58,9 @@ class Order(models.Model):
     def send_order_email(self):
         subject = 'Новый заказ!'
         message = f'Номер заказа: {self.id}\n' \
-                  f'Email Пользователя: {self.user.email}\n' \
+                  f'Email: {self.user.email}\n' \
                   f'Имя пользователя: {self.user.first_name} {self.user.last_name}\n' \
-                  f'Номер телефона пользователя: {self.user.number}\n' \
+                  f'Номер телефона: {self.user.number}\n' \
                   f'Окончательная цена: {self.total_price}\n' \
                   f'Дата заказа: {self.ordered_at}\n\n'
 

@@ -20,4 +20,6 @@ urlpatterns = [
     # path('day/', ProductDayView.as_view(), name='product-of-the-day'),
     path('review/', ReviewCreateView.as_view(), name='create-review'),
     path('review/<int:pk>/', ReviewDetailView.as_view(), name='review-detail'),
+    path('banner/', BannerView.as_view(), name='homepage-banner'),
+
 ]

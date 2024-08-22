@@ -82,3 +82,10 @@ class Review(models.Model):
 
     def __str__(self):
         return f'Review by {self.user} for {self.product} - Rating: {self.rating}'
+
+
+class Banner(models.Model):
+    image = models.ImageField(upload_to='images/')
+
+    def __str__(self):
+        return self.image
