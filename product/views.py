@@ -224,22 +224,59 @@ class ProductListView(generics.ListAPIView):
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
+    @swagger_auto_schema(
+        tags=['product'],
+        operation_description="Этот эндпоинт позволяет создать новый продукт."
+    )
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
+    def get_serializer_context(self):
+        return {'request': self.request}
+
 
 class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+
+    def get_object(self):
+        product = super().get_object()
+        product.similar_products = self.get_similar_products(product)
+        return product
+
+    def get_similar_products(self, product):
+            # Convert price to Decimal for accurate arithmetic operations
+        price = Decimal(product.price)
+        price_range = Decimal('0.2') * price
+
+            # Query for similar products
+        similar_products = Product.objects.filter(
+            category=product.category
+        ).exclude(id=product.id).filter(
+            price__gte=price - price_range,
+            price__lte=price + price_range
+        ).distinct()
+
+            # Serialize similar products
+        serializer = ProductShortSerializer(similar_products, many=True, context=self.get_serializer_context())
+        return serializer.data
+
     @swagger_auto_schema(
         tags=['product'],
         operation_description="Этот эндпоинт позволяет получить, обновить или удалить продукт по ID."
     )
     def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
+        response = super().get(request, *args, **kwargs)
+        data = response.data
+        data['similar_products'] = self.get_object().similar_products
+        return Response(data)
+
     @swagger_auto_schema(
         tags=['product'],
         operation_description="Этот эндпоинт позволяет обновить продукт по ID."
     )
     def put(self, request, *args, **kwargs):
         return super().put(request, *args, **kwargs)
+
     @swagger_auto_schema(
         tags=['product'],
         operation_description="Этот эндпоинт позволяет удалить продукт по ID."

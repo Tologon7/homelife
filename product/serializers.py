@@ -44,7 +44,7 @@ class ProductSerializer(serializers.ModelSerializer):
     brand = BrandSerializer(read_only=True)
     reviews = ReviewSummarySerializer(many=True, read_only=True)
     avg_rating = serializers.SerializerMethodField()
-    # images = ImageSerializer(read_only=True)
+    images = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
@@ -53,9 +53,7 @@ class ProductSerializer(serializers.ModelSerializer):
             'title',
             'category',
             'color',
-            'image1',
-            'image2',
-            'image3',
+            'images',
             'price',
             'promotion',
             'brand',
@@ -67,24 +65,32 @@ class ProductSerializer(serializers.ModelSerializer):
         ]
 
     def get_avg_rating(self, obj):
-        # Здесь мы рассчитываем и округляем средний рейтинг
         if obj.reviews.exists():
             avg_rating = obj.reviews.aggregate(Avg('rating'))['rating__avg']
             return round_to_nearest_half(avg_rating)
         return 0
 
+    def get_images(self, obj):
+        request = self.context.get('request')
+        images = [
+            obj.image1.url if obj.image1 else None,
+            obj.image2.url if obj.image2 else None,
+            obj.image3.url if obj.image3 else None,
+        ]
+        if request:
+            return [request.build_absolute_uri(image) for image in images if image]
+        return [image for image in images if image]
+
 
 class ProductShortSerializer(serializers.ModelSerializer):
     avg_rating = serializers.SerializerMethodField()
-    # images = ImageSerializer(read_only=True)
+    images = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
         fields = [
             'id',
-            'image1',
-            'image2',
-            'image3',
+            'images',
             'avg_rating',
             'title',
             'price',
@@ -96,6 +102,17 @@ class ProductShortSerializer(serializers.ModelSerializer):
             avg_rating = obj.reviews.aggregate(Avg('rating'))['rating__avg']
             return round_to_nearest_half(avg_rating)
         return 0
+
+    def get_images(self, obj):
+        request = self.context.get('request')
+        images = [
+            obj.image1.url if obj.image1 else None,
+            obj.image2.url if obj.image2 else None,
+            obj.image3.url if obj.image3 else None,
+        ]
+        if request:
+            return [request.build_absolute_uri(image) for image in images if image]
+        return [image for image in images if image]
 
 
 class ProductCreateSerializer(serializers.ModelSerializer):
@@ -119,6 +136,14 @@ class ProductCreateSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
+        request = self.context.get('request')
+        if request:
+            images = [
+                request.build_absolute_uri(instance.image1.url) if instance.image1 else None,
+                request.build_absolute_uri(instance.image2.url) if instance.image2 else None,
+                request.build_absolute_uri(instance.image3.url) if instance.image3 else None,
+            ]
+            representation['images'] = [image for image in images if image]
         if not instance.reviews.exists():
             representation.pop('reviews', None)
         return representation

@@ -64,7 +64,7 @@ class UserProfileUpdateView(generics.GenericAPIView):
 
         if serializer.is_valid():
             serializer.save()
-            return Response({'message': 'User updated successfully!'}, status.HTTP_200_OK)
+            return Response({'message': 'Аккаунт успешно обновлен!'}, status.HTTP_200_OK)
         else:
             return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -90,7 +90,12 @@ class UserRegisterView(generics.CreateAPIView):
             user = serializer.save()
             if user.wholesaler and user.otp_code:
                 return Response(
-                    {'message': 'OTP has been sent to the admin. Please provide the OTP to complete registration.'},
+                    {
+                        'message': 'OTP код отправлен на email администратора. '
+                                'В течении 3-х дней администратор позвонит на ваш номер '
+                                'и сообщит OTP код, чтобы одобрить вашу регистрацию '
+                                'как отпового пользователя. '
+                     },
                     status=status.HTTP_200_OK
                 )
             else:
@@ -107,7 +112,7 @@ class WholesalerOTPVerificationView(APIView):
                               " от администратора OTP-код.",
 
         request_body=WholesalerOTPVerificationSerializer,
-        responses={200: 'Registration completed successfully.', 400: 'Invalid OTP code or email.'}
+        responses={200: 'Регистрация прошла успешно!', 400: 'Не правильный OTP код или email :('}
     )
     def post(self, request, *args, **kwargs):
         serializer = WholesalerOTPVerificationSerializer(data=request.data)
@@ -165,7 +170,7 @@ class UserLogoutView(generics.GenericAPIView):
         try:
             token = RefreshToken(refresh_token)
             token.blacklist()
-            return Response({"message": "You have successfully logged out."}, status=status.HTTP_200_OK)
+            return Response({"message": "Вы успешно вышли с аккаунта."}, status=status.HTTP_200_OK)
         except Exception as e:
             raise serializers.ValidationError({'refresh': str(e)})
 
@@ -193,17 +198,17 @@ class ForgotPasswordView(generics.GenericAPIView):
             try:
                 user = User.objects.get(email=email)
             except User.DoesNotExist:
-                return Response({"error": "User with this email does not exist."}, status=status.HTTP_404_NOT_FOUND)
+                return Response({"error": "Пользователь с таким email не существует :("}, status=status.HTTP_404_NOT_FOUND)
             otp_code = OTP.generate_otp()
             OTP.objects.create(user=user, otp=otp_code)
             # Send the OTP to the user's email
-            subject = 'Forgot Password OTP'
-            message = f'Your OTP is: {otp_code}'
+            subject = 'Забыли пароль OTP'
+            message = f'Ваш OTP код: {otp_code}'
             from_email = settings.EMAIL_HOST_USER
             recipient_list = [email]
             send_mail(subject, message, from_email, recipient_list)
 
-            return Response({"message": "OTP sent to your email."}, status=status.HTTP_200_OK)
+            return Response({"message": "OTP Код отправлен на вашу почту!"}, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -230,7 +235,7 @@ class ConfirmCodeView(generics.GenericAPIView):
         try:
             confirmation_code = OTP.objects.get(otp=code)
         except OTP.DoesNotExist:
-            return Response({"error": "Invalid or already confirmed code."}, status=400)
+            return Response({"error": "Неправильный код :("}, status=400)
 
         user = confirmation_code.user
         confirmation_code.delete()
@@ -238,7 +243,7 @@ class ConfirmCodeView(generics.GenericAPIView):
         refresh = RefreshToken.for_user(user)
 
         return Response({
-            "message": "Code confirmed successfully.",
+            "message": "Код успешно применен!",
             'user_id': str(user.id),
             "refresh": str(refresh),
             "access": str(refresh.access_token),
@@ -267,7 +272,7 @@ class ChangeForgotPasswordView(generics.GenericAPIView):
         user.save()
 
         return Response({
-            'message': 'The password has been successfully changed.'
+            'message': 'Пароль успешно изменен!'
         }, status=status.HTTP_200_OK)
 
 
@@ -293,7 +298,7 @@ class ChangePasswordView(generics.UpdateAPIView):
         user.save()
 
         return Response({
-            'message': 'The password has been successfully changed.'
+            'message': 'Пароль успешно изменен!'
         }, status=status.HTTP_200_OK)
 
 
