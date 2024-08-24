@@ -78,6 +78,12 @@ class CartItemsSerializer(serializers.ModelSerializer):
         return instance
 
 
+class PaymentMethodSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PaymentMethod
+        fields = ['id', 'name']
+
+
 class OrderSerializer(serializers.ModelSerializer):
     payment_method = serializers.PrimaryKeyRelatedField(queryset=PaymentMethod.objects.all())
 
