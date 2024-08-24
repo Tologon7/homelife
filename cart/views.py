@@ -140,28 +140,28 @@ class CartView(APIView):
 class CreateOrderView(APIView):
     permission_classes = [IsAuthenticated]
 
-    @swagger_auto_schema(
-        tags=['order'],
-        operation_description="Создать заказ из корзины пользователя."
-    )
     def post(self, request):
         user = request.user
+        data = request.data
+
+        # Получаем корзину пользователя
         cart = Cart.objects.filter(user=user, ordered=False).first()
 
         if not cart:
-            return Response({'error': 'Cart not found or already ordered'}, status=400)
+            return Response({'error': 'Cart not found'}, status=400)
 
-        order = Order.objects.create(
-            user=user,
-            cart=cart,
-            total_price=cart.total_price
-        )
+        # Создаем заказ
+        order_data = {
+            'user': user.id,
+            'cart': cart.id,
+            'total_price': cart.total_price,
+            'address': data.get('address'),
+            'payment_method': data.get('payment_method')  # ID способа оплаты
+        }
+        serializer = OrderSerializer(data=order_data)
+        if serializer.is_valid():
+            order = serializer.save()
+            order.send_order_email()
+            return Response({'success': 'Order created and email sent'}, status=201)
+        return Response(serializer.errors, status=400)
 
-        # Предполагается, что метод send_order_email() существует и корректно реализован
-        order.send_order_email()
-
-        cart.ordered = True
-        cart.save()
-
-        serializer = OrderSerializer(order)
-        return Response(serializer.data, status=201)

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Cart, CartItem, Order
+from .models import Cart, CartItem, Order, PaymentMethod
 from product.serializers import ProductSerializer
 
 
@@ -79,8 +79,8 @@ class CartItemsSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
-    cart = CartSerializer(read_only=True)
+    payment_method = serializers.PrimaryKeyRelatedField(queryset=PaymentMethod.objects.all())
 
     class Meta:
         model = Order
-        fields = '__all__'
+        fields = ['user', 'cart', 'total_price', 'address', 'payment_method']

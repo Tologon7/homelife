@@ -16,10 +16,6 @@ from product.models import *
 
 
 class HomepageView(APIView):
-    filter_backends = [DjangoFilterBackend, SearchFilter]
-    filterset_class = ProductFilter
-    search_fields = ['title', 'price', 'promotion', 'description']
-
     @swagger_auto_schema(
         tags=['product'],
         operation_description="Этот эндпоинт возвращает данные для главной страницы, "

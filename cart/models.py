@@ -5,7 +5,7 @@ from django.conf import settings
 from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
 from django.core.mail import send_mail
-
+from django.utils import timezone
 
 class Cart(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -46,41 +46,45 @@ def correct_price(sender, instance, **kwargs):
 
 
 #order
+
+class PaymentMethod(models.Model):
+    name = models.CharField(max_length=50)  # Например: "Card", "Cash", "Bank Transfer"
+    description = models.TextField(blank=True, null=True)  # Дополнительное описание (по желанию)
+
+    def __str__(self):
+        return self.name
+
+
 class Order(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE)
-    total_price = models.FloatField(default=0)
-    ordered_at = models.DateTimeField(auto_now_add=True)
+    total_price = models.FloatField()
+    address = models.CharField(max_length=255)
+    payment_method = models.ForeignKey(PaymentMethod, on_delete=models.CASCADE)
+    ordered_at = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
-        return f'Order {self.id} by {self.user.email}'
+        return f"Order {self.id} by {self.user.email}"
 
     def send_order_email(self):
         subject = 'Новый заказ!'
         message = f'Номер заказа: {self.id}\n' \
-                  f'Email: {self.user.email}\n' \
-                  f'Имя пользователя: {self.user.first_name} {self.user.last_name}\n' \
-                  f'Номер телефона: {self.user.number}\n' \
-                  f'Окончательная цена: {self.total_price}\n' \
-                  f'Дата заказа: {self.ordered_at}\n\n'
+                  f'Email Пользователя: {self.user.email}\n' \
+                  f'Имя пользователя: {self.user.first_name}, {self.user.last_name}\n' \
+                  f'Номер телефона пользователя: {self.user.number}\n' \
+                  f'Адрес: {self.address}\n' \
+                  f'Способ оплаты: {self.payment_method.name}\n' \
+                  f'Цена: {self.total_price}\n' \
+                  f'Ordered At: {self.ordered_at}\n\n'
 
         for item in self.cart.cartitem_set.all():
-            item_message = f'Данные продукта:\n' \
+            message += f'Данные продукта:\n' \
                            f'Название: {item.product.title}\n' \
                            f'Категория: {item.product.category}\n' \
                            f'Цвет: {item.product.color}\n' \
                            f'Бренд: {item.product.brand}\n' \
                            f'Количество: {item.quantity}\n' \
                            f'Цена: {item.price}\n'
-
-            # Проверяем, есть ли промоакция для текущего CartItem
-            if item.promotion:
-                item_message += f'Применённая промоакция: {item.promotion}%\n'
-            else:
-                item_message += 'Промоакция не применялась.\n'
-
-            item_message += '\n'
-            message += item_message
 
         admin_email = 'homelife.site.kg@gmail.com'
         send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [admin_email])
