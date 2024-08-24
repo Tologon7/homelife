@@ -11,9 +11,46 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class ColorSerializer(serializers.ModelSerializer):
+    key = serializers.SerializerMethodField()
+
     class Meta:
         model = Color
-        fields = ["title"]
+        fields = ['title', 'key']
+
+    def get_key(self, obj):
+        translation = {
+            'белый': 'white',
+            'черный': 'black',
+            'красный': 'red',
+            'синий': 'blue',
+            'зеленый': 'green',
+            'желтый': 'yellow',
+            'оранжевый': 'orange',
+            'пурпурный': 'purple',
+            'розовый': 'pink',
+            'серый': 'gray',
+            'коричневый': 'brown',
+            'бежевая': 'beige',
+            'фиолетовый': 'violet',
+            'голубой': 'light blue',
+            'бирюзовый': 'turquoise',
+            'мятный': 'mint',
+            'лавандовый': 'lavender',
+            'гранатовый': 'pomegranate',
+            'песочный': 'sand',
+            'оливковый': 'olive',
+            'малахитовый': 'malachite',
+            'медный': 'copper',
+            'слоновая кость': 'ivory',
+            'медный': 'copper'
+        }
+
+
+        if obj.key:
+            return translation.get(obj.key,
+                                   obj.key)
+
+        return translation.get(obj.title.lower(), obj.title.lower())
 
 
 class BrandSerializer(serializers.ModelSerializer):
