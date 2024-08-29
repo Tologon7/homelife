@@ -22,15 +22,19 @@ class CartItemsSerializer(serializers.ModelSerializer):
         cart = validated_data.get('cart')
         product = validated_data.get('product')
         quantity = validated_data.get('quantity')
-        user = self.context['request'].user  # Устанавливаем текущего пользователя
+        user = self.context['request'].user
 
         if product.quantity < quantity:
             raise serializers.ValidationError('Not enough stock available.')
 
+        # Устанавливаем цену с учетом промо-цены
+        price = product.promotion if product.promotion is not None else product.price
+        total_price = price * quantity
+
         cart_item, created = CartItem.objects.get_or_create(
             cart=cart,
             product=product,
-            defaults={'quantity': quantity, 'price': product.price * quantity, 'user': user}
+            defaults={'quantity': quantity, 'price': total_price, 'user': user}
         )
 
         if not created:
@@ -41,7 +45,7 @@ class CartItemsSerializer(serializers.ModelSerializer):
             # Обновляем количество и цену
             product.quantity -= (quantity - cart_item.quantity)
             cart_item.quantity = quantity
-            cart_item.price = product.price * quantity
+            cart_item.price = price * quantity
             product.save()
             cart_item.save()
         else:
@@ -65,8 +69,12 @@ class CartItemsSerializer(serializers.ModelSerializer):
 
             # Обновляем количество товара на складе
             product.quantity += instance.quantity - new_quantity
+
+            # Устанавливаем цену с учетом промо-цены
+            price = product.promotion if product.promotion is not None else product.price
+            instance.price = price * new_quantity
+
             instance.quantity = new_quantity
-            instance.price = product.price * new_quantity
             product.save()
             instance.save()
 

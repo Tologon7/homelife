@@ -19,7 +19,7 @@ class HomepageView(APIView):
     @swagger_auto_schema(
         tags=['product'],
         operation_description="Этот эндпоинт возвращает данные для главной страницы, "
-                              "включая товар дня, новые товары, "
+                              "включая баннер, товар дня, новые товары, "
                               "товары со скидками и популярные товары."
                               "Для выбора товрав дня, надо найти товар который "
                               "мы хотим сделать товаром дня, и надо обновить "
@@ -215,7 +215,7 @@ class ProductListView(generics.ListAPIView):
 
     @swagger_auto_schema(
         tags=['product'],
-        operation_description="Этот эндпоинт позволяет получить список всех продуктов."
+        operation_description="Этот эндпоинт позволяет получить список всех товаров."
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
@@ -239,6 +239,12 @@ class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
         product.similar_products = self.get_similar_products(product)
         return product
 
+    @swagger_auto_schema(
+        tags=['product'],
+        operation_description="Этот эндпоинт позволяет посмотреть похожие товары, "
+                              "на товар который мы выбрали через ID, "
+                              "схожость выбирается по категории и по цене товара."
+    )
     def get_similar_products(self, product):
             # Convert price to Decimal for accurate arithmetic operations
         price = Decimal(product.price)
@@ -291,7 +297,7 @@ class ProductNewView(generics.ListAPIView):
 
     @swagger_auto_schema(
         tags=['product'],
-        operation_description="Этот эндпоинт позволяет получить список новинок продуктов."
+        operation_description="Этот эндпоинт позволяет получить список новинок товаров."
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
@@ -330,7 +336,8 @@ class ProductPopularView(generics.ListAPIView):
 
     @swagger_auto_schema(
         tags=['product'],
-        operation_description="Этот эндпоинт позволяет получить список популярных продуктов (только те, у которых есть отзывы)."
+        operation_description="Этот эндпоинт позволяет получить список популярных продуктов "
+                              "(только те, у которых есть отзывы)."
     )
     def get_queryset(self):
         # Получаем популярные продукты с аннотациями
@@ -399,5 +406,3 @@ class BannerView(generics.RetrieveUpdateDestroyAPIView):
         # Получаем первый объект, либо создаем его, если он не существует
         obj, created = Banner.objects.get_or_create(id=1)
         return obj
-
-
