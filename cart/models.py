@@ -108,7 +108,8 @@ class Order(models.Model):
                            f'Цвет: {item.product.color}\n' \
                            f'Бренд: {item.product.brand}\n' \
                            f'Количество: {item.quantity}\n' \
-                           f'Цена товара: {item.price / item.quantity}\n\n'
+                           f'Цена за 1 товар: {item.price / item.quantity}\n\n' \
+                           f'Цена за все товары: {item.price}\n\n' \
 
         admin_email = 'homelife.site.kg@gmail.com'
         send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [admin_email])
