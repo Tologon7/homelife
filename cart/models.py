@@ -93,7 +93,7 @@ class Order(models.Model):
                   f'Номер телефона пользователя: {self.user.number}\n' \
                   f'Адрес: {self.address}\n' \
                   f'Способ оплаты: {self.payment_method.name if self.payment_method else "Не указан"}\n' \
-                  f'Цена: {self.total_price}\n' \
+                  f'Окончательная цена: {self.total_price}\n' \
                   f'Время заказа: {order_time_str}\n\n'
 
         if self.user.wholesaler:
@@ -108,7 +108,7 @@ class Order(models.Model):
                            f'Цвет: {item.product.color}\n' \
                            f'Бренд: {item.product.brand}\n' \
                            f'Количество: {item.quantity}\n' \
-                           f'Цена товара: {item.price}\n\n'
+                           f'Цена товара: {item.price / item.quantity}\n\n'
 
         admin_email = 'homelife.site.kg@gmail.com'
         send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [admin_email])
