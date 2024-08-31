@@ -98,7 +98,8 @@ class ProductSerializer(serializers.ModelSerializer):
             'description',
             'is_product_of_the_day',
             'reviews',
-            'avg_rating'
+            'avg_rating',
+            'is_active',
         ]
 
     def get_avg_rating(self, obj):
@@ -168,7 +169,8 @@ class ProductCreateSerializer(serializers.ModelSerializer):
             'brand',
             'quantity',
             'description',
-            'is_product_of_the_day'
+            'is_product_of_the_day',
+            'is_active'
         ]
 
     def to_representation(self, instance):

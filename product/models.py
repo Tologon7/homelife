@@ -42,6 +42,12 @@ class Product(models.Model):
     quantity = models.IntegerField()
     description = models.TextField(max_length=2551)
     is_product_of_the_day = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+
+    def save(self, *args, **kwargs):
+        if self.quantity == 0:
+            self.is_active = False
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.title

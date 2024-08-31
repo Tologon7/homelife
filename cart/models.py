@@ -101,14 +101,15 @@ class Order(models.Model):
 
         items = self.cart.cartitem_set.all()
         if items.exists():
-            message += "Товары в заказе:\n"
+            message += "\nТовары в заказе:\n\n"
             for item in items:
-                message += f'Продукт: {item.product.title}\n' \
+                message += f'ID продукта: {item.product.id}\n' \
+                           f'Продукт: {item.product.title}\n' \
                            f'Категория: {item.product.category}\n' \
                            f'Цвет: {item.product.color}\n' \
                            f'Бренд: {item.product.brand}\n' \
                            f'Количество: {item.quantity}\n' \
-                           f'Цена за 1 товар: {item.price / item.quantity}\n\n' \
+                           f'Цена за 1 товар: {item.price / item.quantity}\n' \
                            f'Цена за все товары: {item.price}\n\n' \
 
         admin_email = 'homelife.site.kg@gmail.com'

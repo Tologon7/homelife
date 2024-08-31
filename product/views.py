@@ -28,10 +28,10 @@ class HomepageView(APIView):
     )
     def get(self, request, *args, **kwargs):
         banner = Banner.objects.filter(id=1).first()
-        product_of_the_day = Product.objects.filter(is_product_of_the_day=True).first()
-        new_products = Product.objects.all().order_by('-id')[:4]
-        promotion_products = Product.objects.filter(promotion__isnull=False)[:4]
-        popular_products = Product.objects.annotate(
+        product_of_the_day = Product.objects.filter(is_product_of_the_day=True, is_active=True).first()
+        new_products = Product.objects.filter(is_active=True).order_by('-id')[:4]
+        promotion_products = Product.objects.filter(promotion__isnull=False, is_active=True)[:4]
+        popular_products = Product.objects.filter(is_active=True).annotate(
             review_count=Count('reviews'),
             avg_rating=Avg('reviews__rating')
         ).filter(
@@ -206,7 +206,7 @@ class ColorDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class ProductListView(generics.ListAPIView):
-    queryset = Product.objects.all()
+    queryset = Product.objects.filter(is_active=True)
     serializer_class = ProductShortSerializer
     pagination_class = CustomPagination
     filter_backends = [DjangoFilterBackend, SearchFilter]
@@ -288,7 +288,7 @@ class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class ProductNewView(generics.ListAPIView):
-    queryset = Product.objects.all()
+    queryset = Product.objects.filter(is_active=True)
     serializer_class = ProductShortSerializer
     pagination_class = CustomPagination
     filter_backends = [DjangoFilterBackend, SearchFilter]
@@ -307,7 +307,7 @@ class ProductNewView(generics.ListAPIView):
 
 
 class ProductPromotionView(generics.ListAPIView):
-    queryset = Product.objects.filter(promotion__isnull=False)
+    queryset = Product.objects.filter(promotion__isnull=False, is_active=True)
     serializer_class = ProductShortSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_class = ProductFilter
@@ -345,7 +345,8 @@ class ProductPopularView(generics.ListAPIView):
             review_count=Count('reviews'),
             avg_rating=Avg('reviews__rating')  # Средний рейтинг
         ).filter(
-            review_count__gt=0
+            review_count__gt=0,
+            is_active=True
         ).order_by('-avg_rating')  # Сортируем только по avg_rating
 
     def get(self, request, *args, **kwargs):
