@@ -170,7 +170,7 @@ class ProductCreateSerializer(serializers.ModelSerializer):
             'quantity',
             'description',
             'is_product_of_the_day',
-            'is_active'
+            # 'is_active'
         ]
 
     def to_representation(self, instance):
