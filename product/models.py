@@ -8,11 +8,11 @@ from decimal import Decimal, InvalidOperation
 
 
 class Category(models.Model):
-    title = models.CharField(max_length=200)
+    label = models.CharField(max_length=200)
+    value = models.CharField(max_length=200, unique=True)
 
     def __str__(self):
-        return self.title
-
+        return self.label
 
 class Brand(models.Model):
     title = models.CharField(max_length=200)

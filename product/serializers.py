@@ -5,11 +5,48 @@ from .utils import round_to_nearest_half
 
 
 class CategorySerializer(serializers.ModelSerializer):
+    value = serializers.SerializerMethodField(read_only=True)  # значение на английском
+    label = serializers.CharField(read_only=True)  # значение на русском
+
     class Meta:
         model = Category
-        fields = ["title"]
+        fields = ('value', 'label')
 
+    def get_value(self, obj):
+        translation = {
+            'холодильник': 'refrigerator',
+            'стиральная машина': 'washing machine',
+            'посудомоечная машина': 'dishwasher',
+            'микроволновая печь': 'microwave',
+            'телевизор': 'television',
+            'пылесос': 'vacuum cleaner',
+            'кондиционер': 'air conditioner',
+            'печь': 'oven',
+            'фен': 'hair dryer',
+            'тостер': 'toaster',
+            'кофеварка': 'coffee maker',
+            'электрический чайник': 'electric kettle',
+            'утюг': 'iron',
+            'блендер': 'blender',
+            'соковыжималка': 'juicer',
+            'сушилка для белья': 'clothes dryer',
+            'кухонный комбайн': 'food processor',
+            'вентилятор': 'fan',
+            'холодильная камера': 'cold storage',
+            'водонагреватель': 'water heater',
+            'мясорубка': 'meat grinder',
+            'вафельница': 'waffle maker',
+            'суповарка': 'soup maker',
+            'электрическая духовка': 'electric oven',
+            'мясопереработчик': 'meat slicer',
+            'бассейн': 'pool',
+            'система фильтрации воды': 'water filtration system',
+            'кухонные весы': 'kitchen scale',
+            'размораживатель': 'defroster',
+            'хлебопечка': 'bread maker',
+        }
 
+        return translation.get(obj.label.lower(), obj.label)
 class ColorSerializer(serializers.ModelSerializer):
     key = serializers.SerializerMethodField()
 

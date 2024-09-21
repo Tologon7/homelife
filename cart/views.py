@@ -7,27 +7,81 @@ from product.models import Product
 from .serializers import CartItemsSerializer, OrderSerializer
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
-
+from drf_yasg import openapi
 class CartView(APIView):
     permission_classes = [IsAuthenticated]
 
     @swagger_auto_schema(
         tags=['cart'],
-        operation_description="Получить список товаров в корзине пользователя."
+        operation_description="Получить список товаров в корзине пользователя.",
+        responses={
+            200: openapi.Response(
+                description="Список товаров в корзине пользователя",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_ARRAY,
+                    items=openapi.Schema(
+                        type=openapi.TYPE_OBJECT,
+                        properties={
+                            'id': openapi.Schema(type=openapi.TYPE_INTEGER, description="ID товара"),
+                            'name': openapi.Schema(type=openapi.TYPE_STRING, description="Название товара"),
+                            'quantity': openapi.Schema(type=openapi.TYPE_INTEGER,
+                                                       description="Количество товара в корзине"),
+                            'price': openapi.Schema(type=openapi.TYPE_NUMBER, format=openapi.FORMAT_FLOAT,
+                                                    description="Цена товара"),
+                            'description': openapi.Schema(type=openapi.TYPE_STRING, description="Описание товара"),
+                            'image_url': openapi.Schema(type=openapi.TYPE_STRING, description="URL изображения товара"),
+                        },
+                    ),
+                ),
+            ),
+            404: openapi.Response(
+                description="Корзина не найдена",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'error': openapi.Schema(type=openapi.TYPE_STRING, description="Сообщение об ошибке"),
+                    },
+                ),
+            ),
+        },
     )
     def get(self, request):
         user = request.user
         cart = Cart.objects.filter(user=user, ordered=False).first()
+
         if not cart:
             return Response({'error': 'Cart not found'}, status=404)
+
         queryset = CartItem.objects.filter(cart=cart)
         serializer = CartItemsSerializer(queryset, many=True)
-        return Response(serializer.data)
 
+        return Response(serializer.data)
     @swagger_auto_schema(
         tags=['cart'],
         operation_description="Этот эндпоинт позволяет пользователю добавить товар в свою корзину. "
-                              "Для этого нужно указать ID товара и его количество"
+                              "Для этого нужно указать ID товара и его количество",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'product  id ': openapi.Schema(type=openapi.TYPE_INTEGER, description="ID товара", required=['product']),
+                'quantity': openapi.Schema(type=openapi.TYPE_INTEGER, description="Количество товара",
+                                           required=['quantity']),
+            },
+        ),
+        responses={
+            201: openapi.Response(
+                description="Товар добавлен в корзину",
+                schema=openapi.Schema(type=openapi.TYPE_OBJECT, properties={
+                    'success': openapi.Schema(type=openapi.TYPE_STRING, description="Сообщение о результате операции"),
+                }),
+            ),
+            400: openapi.Response(
+                description="Ошибка при добавлении товара в корзину",
+                schema=openapi.Schema(type=openapi.TYPE_OBJECT, properties={
+                    'error': openapi.Schema(type=openapi.TYPE_STRING, description="Сообщение об ошибке"),
+                }),
+            ),
+        }
     )
     def post(self, request):
         data = request.data
@@ -74,7 +128,16 @@ class CartView(APIView):
 
     @swagger_auto_schema(
         tags=['cart'],
-        operation_description="Изменить/обновить товар в корзине пользователя."
+        operation_description="Изменить/обновить товар в корзине пользователя.",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'id': openapi.Schema(type=openapi.TYPE_INTEGER, description="ID товара в корзине", required=['id']),
+                'quantity': openapi.Schema(type=openapi.TYPE_INTEGER, description="Новое количество товара",
+                                           required=['quantity']),
+            },
+            required=['id', 'quantity']
+        )
     )
     def put(self, request):
         data = request.data
@@ -109,34 +172,41 @@ class CartView(APIView):
 
     @swagger_auto_schema(
         tags=['cart'],
-        operation_description="Удалить товар из корзины пользователя."
+        operation_description="Удалить товар из корзины пользователя.",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'id': openapi.Schema(type=openapi.TYPE_INTEGER, description="ID товара в корзине", required=['id']),
+            },
+            required=['id']
+        ),
+        responses={
+            204: 'Товар успешно удалён из корзины.',
+            404: 'Корзина не найдена или товар не найден.'
+        }
     )
     def delete(self, request):
-        user = request.user
         data = request.data
-
         cart_item = get_object_or_404(CartItem, id=data.get('id'))
         cart = cart_item.cart
-        # Increase the stock of the product
+
+        # Увеличиваем количество товара на складе
         product = cart_item.product
         product.quantity += cart_item.quantity
         product.save()
 
         cart_item.delete()
 
-        # Update cart total price
+        # Обновляем общую цену корзины
         if CartItem.objects.filter(cart=cart).exists():
-            queryset = CartItem.objects.filter(cart=cart)
-            serializer = CartItemsSerializer(queryset, many=True)
             cart.total_price = sum(item.price for item in CartItem.objects.filter(cart=cart))
             cart.save()
-            return Response(serializer.data)
+            return Response({'success': 'Item removed from your cart'}, status=204)
         else:
-            # If no items left in the cart, set the total_price to 0
+            # Если в корзине не осталось товаров, устанавливаем общую цену в 0
             cart.total_price = 0
             cart.save()
-            return Response({'success': 'Item removed from your cart'})
-
+            return Response({'success': 'Item removed from your cart'}, status=204)
 
 class CreateOrderView(APIView):
     permission_classes = [IsAuthenticated]

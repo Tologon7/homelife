@@ -202,7 +202,7 @@ class WholesalerOTPVerificationSerializer(serializers.Serializer):
 class UserLoginSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
-        data['user'] = self.user  # добавляем объект пользователя
+        data['user'] = self.user
         return data
 
 
