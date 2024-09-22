@@ -64,8 +64,8 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.security.SecurityMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -73,6 +73,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
+    #'config.middleware.CORSMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -208,10 +209,24 @@ SIMPLE_JWT = {
 }
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://localhost:3001",
-    "http://127.0.0.1:8000",
-    "http://homelifee.onrender.com",
+    "http://localhost:3000",  # Локальный адрес
+    "http://homelifee.onrender.com",  # Ваш удаленный сервер
+]
+
+CORS_ALLOW_METHODS = [
+    'GET',
+    'POST',
+    'OPTIONS',
+    'PUT',
+    'DELETE',
+    'PATCH',
+]
+
+CORS_ALLOW_HEADERS = [
+    'X-CSRFToken',
+    'Authorization',
+    'Content-Type',
+    'Accept',
 ]
 
 
