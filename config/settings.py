@@ -167,15 +167,16 @@ SIMPLE_JWT = {
 }
 
 # CORS settings
+# settings.py
+
+CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:3001",
-    "http://127.0.0.1:8000",  # Локальный адрес для тестирования
-    "http://homelifee.onrender.com",  # Убедитесь, что это правильно указанный адрес
+    "http://212.112.118.74",  # Ваш IP-адрес (если это нужно)
+    "https://homelifee.onrender.com",  # Без конечного слэша
 ]
 
-CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_ALL_ORIGINS = False  # Это должно быть False, если вы используете CORS_ALLOWED_ORIGINS
 
 # Cloudinary settings
 CLOUDINARY_STORAGE = {
