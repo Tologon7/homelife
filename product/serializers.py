@@ -5,12 +5,11 @@ from .utils import round_to_nearest_half
 
 
 class CategorySerializer(serializers.ModelSerializer):
-    value = serializers.SerializerMethodField(read_only=True)  # значение на английском
-    label = serializers.CharField(read_only=True)  # значение на русском
+    value = serializers.SerializerMethodField()
 
     class Meta:
         model = Category
-        fields = ('value', 'label')
+        fields = ['label', 'value']
 
     def get_value(self, obj):
         translation = {
@@ -46,15 +45,21 @@ class CategorySerializer(serializers.ModelSerializer):
             'хлебопечка': 'bread maker',
         }
 
-        return translation.get(obj.label.lower(), obj.label)
+        if obj.value:
+            return translation.get(obj.value,
+                                   obj.value)
+
+        return translation.get(obj.label.lower(), obj.label.lower())
+
+
 class ColorSerializer(serializers.ModelSerializer):
-    key = serializers.SerializerMethodField()
+    value = serializers.SerializerMethodField()
 
     class Meta:
         model = Color
-        fields = ['title', 'key']
+        fields = ['label', 'value']
 
-    def get_key(self, obj):
+    def get_value(self, obj):
         translation = {
             'белый': 'white',
             'черный': 'black',
@@ -83,18 +88,64 @@ class ColorSerializer(serializers.ModelSerializer):
         }
 
 
-        if obj.key:
-            return translation.get(obj.key,
-                                   obj.key)
+        if obj.value:
+            return translation.get(obj.value,
+                                   obj.value)
 
-        return translation.get(obj.title.lower(), obj.title.lower())
-
+        return translation.get(obj.label.lower(), obj.label.lower())
 
 class BrandSerializer(serializers.ModelSerializer):
+    value = serializers.SerializerMethodField()
+
     class Meta:
         model = Brand
-        fields = ["title"]
+        fields = ['label', 'value']
 
+    def get_value(self, obj):
+        translation = {
+            'Acer': 'ACER',
+            'Amazon': 'AMAZON',
+            'Apple': 'APPLE',
+            'Asus': 'ASUS',
+            'Barnes & Noble': 'BARNES & NOBLE',
+            'Blackberry': 'BLACKBERRY',
+            'Bosch': 'BOSCH',
+            'Bose': 'BOSE',
+            'Canon': 'CANON',
+            'Dell': 'DELL',
+            'Denon': 'DENON',
+            'Garmin': 'GARMIN',
+            'Hewlett Packard': 'HEWLETT PACKARD',
+            'Htc': 'HTC',
+            'Lenovo': 'LENOVO',
+            'LG': 'LG',
+            'Microsoft': 'MICROSOFT',
+            'Motorola': 'MOTOROLA',
+            'Newegg': 'NEWEGG',
+            'Nexus': 'NEXUS',
+            'Nikon': 'NIKON',
+            'Nokia': 'NOKIA',
+            'Olloclip': 'OLLOCLIP',
+            'Olympus': 'OLYMPUS',
+            'Panasonic': 'PANASONIC',
+            'Philips': 'PHILIPS',
+            'Pioneer': 'PIONEER',
+            'Radioshack': 'RADIOSHACK',
+            'Ricoh': 'RICOH',
+            'Samsung': 'SAMSUNG',
+            'Sharp': 'SHARP',
+            'Sony': 'SONY',
+            'Tomtom': 'TOMTOM',
+            'Toshiba': 'TOSHIBA',
+            'Xbox': 'XBOX',
+        }
+
+
+        if obj.value:
+            return translation.get(obj.value, obj.value).upper()
+
+
+        return translation.get(obj.label.lower(), obj.label).upper()
 
 class ReviewSummarySerializer(serializers.ModelSerializer):
     class Meta:
@@ -102,14 +153,6 @@ class ReviewSummarySerializer(serializers.ModelSerializer):
         fields = ['id', 'rating', 'comments']
 
 
-# class ImageSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Product
-#         fields = [
-#             'image1',
-#             'image2',
-#             'image3'
-#         ]
 
 
 class ProductSerializer(serializers.ModelSerializer):

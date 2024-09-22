@@ -67,7 +67,6 @@ class HomepageView(APIView):
         serializer = ProductShortSerializer(products, many=True)
         return serializer.data
 
-
 class CategoryListCreateView(generics.ListCreateAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
@@ -85,9 +84,11 @@ class CategoryListCreateView(generics.ListCreateAPIView):
         operation_description="Этот эндпоинт позволяет создать новую категорию."
     )
     def post(self, request, *args, **kwargs):
-        return super().post(request, *args, **kwargs)
-
-
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()  # Сохраняем новую категорию
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer

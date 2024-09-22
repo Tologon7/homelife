@@ -1,34 +1,32 @@
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.db import models
 
 from config import settings
 from cloudinary.models import CloudinaryField
 from decimal import Decimal, InvalidOperation
 
-
 class Category(models.Model):
     label = models.CharField(max_length=200)
-    value = models.CharField(max_length=200, unique=True)
+    value = models.CharField(max_length=50, blank=True, null=True)
 
     def __str__(self):
         return self.label
 
 class Brand(models.Model):
-    title = models.CharField(max_length=200)
+    label = models.CharField(max_length=200)
+    value = models.CharField(max_length=50, blank=True, null=True)
 
     def __str__(self):
-        return self.title
-
+        return self.label
 
 class Color(models.Model):
-    title = models.CharField(max_length=200)
-    key = models.CharField(max_length=50, blank=True, null=True)
+    label = models.CharField(max_length=200)
+    value = models.CharField(max_length=50, blank=True, null=True)
 
     def __str__(self):
-        return self.title
-
-
+        return self.label
 class Product(models.Model):
     title = models.CharField(max_length=255)
     image1 = models.ImageField(upload_to='images/', blank=True)
