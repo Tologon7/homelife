@@ -208,10 +208,14 @@ SIMPLE_JWT = {
     'JTI_CLAIM': 'jti',
 }
 
+
+
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",  # Локальный адрес
-    "http://homelifee.onrender.com",  # Ваш удаленный сервер
+    'http://homelifee.onrender.com',
+    'http://127.0.0.1:8000',
 ]
+CSRF_TRUSTED_ORIGINS = ['http://homelifee.onrender.com']
+
 
 CORS_ALLOW_METHODS = [
     'GET',
