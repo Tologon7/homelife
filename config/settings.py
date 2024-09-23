@@ -5,7 +5,7 @@ import smtplib
 from django.core.mail.backends.smtp import EmailBackend
 import ssl
 from decouple import config
-
+from corsheaders.defaults import default_headers
 import certifi
 import os
 os.environ['SSL_CERT_FILE'] = certifi.where()
@@ -208,14 +208,11 @@ SIMPLE_JWT = {
     'JTI_CLAIM': 'jti',
 }
 
-
-
 CORS_ALLOWED_ORIGINS = [
-    'http://homelifee.onrender.com',
+    'https://homelifee.onrender.com',
     'http://127.0.0.1:8000',
 ]
-CSRF_TRUSTED_ORIGINS = ['http://homelifee.onrender.com']
-
+CSRF_TRUSTED_ORIGINS = ['https://homelifee.onrender.com']
 
 CORS_ALLOW_METHODS = [
     'GET',
@@ -226,12 +223,13 @@ CORS_ALLOW_METHODS = [
     'PATCH',
 ]
 
-CORS_ALLOW_HEADERS = [
+CORS_ALLOW_HEADERS = list(default_headers) + [
     'X-CSRFToken',
     'Authorization',
     'Content-Type',
     'Accept',
 ]
+
 
 
 CORS_ALLOW_ALL_ORIGINS = True
