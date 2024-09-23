@@ -230,11 +230,7 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
     'Accept',
 ]
 
-
-
 CORS_ALLOW_ALL_ORIGINS = True
-
-
 
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME'),
