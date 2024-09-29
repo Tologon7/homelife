@@ -5,9 +5,10 @@ import smtplib
 from django.core.mail.backends.smtp import EmailBackend
 import ssl
 from decouple import config
-from corsheaders.defaults import default_headers
 import certifi
 import os
+from corsheaders.defaults import default_headers
+
 os.environ['SSL_CERT_FILE'] = certifi.where()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -152,16 +153,17 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+
 REST_FRAMEWORK = {
-    'DEFAULT_RENDERER_CLASSES': (
-        'rest_framework.renderers.JSONRenderer',
-        'rest_framework.renderers.BrowsableAPIRenderer',  # Добавляем рендерер для браузера
-    ),
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+
 }
+
+
+
 
 
 REST_AUTH = {
@@ -207,11 +209,11 @@ SIMPLE_JWT = {
     'TOKEN_TYPE_CLAIM': 'token_type',
     'JTI_CLAIM': 'jti',
 }
-
 CORS_ALLOWED_ORIGINS = [
     'https://homelifee.onrender.com',
     'http://127.0.0.1:8000',
 ]
+
 CSRF_TRUSTED_ORIGINS = ['https://homelifee.onrender.com']
 
 CORS_ALLOW_METHODS = [
@@ -223,15 +225,11 @@ CORS_ALLOW_METHODS = [
     'PATCH',
 ]
 
-CORS_ALLOW_HEADERS = list(default_headers) + [
-    'X-CSRFToken',
-    'Authorization',
-    'Content-Type',
-    'Accept',
-]
+
 
 CORS_ALLOW_ALL_ORIGINS = True
 
+# Настройки Cloudinary
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME'),
     'API_KEY': config('CLOUDINARY_API_KEY'),
