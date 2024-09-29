@@ -14,6 +14,9 @@ from django.db.models import Count, Avg
 from product.models import *
 from rest_framework.permissions import IsAuthenticated
 from .filters import ProductFilter
+from drf_yasg import openapi
+
+
 
 class HomepageView(APIView):
     @swagger_auto_schema(
@@ -228,6 +231,7 @@ class ProductListView(generics.ListAPIView):
 
     def get_serializer_context(self):
         return {'request': self.request}
+
 class ProductSearchView(generics.ListAPIView):
     queryset = Product.objects.filter(is_active=True)
     serializer_class = ProductShortSerializer
@@ -236,11 +240,43 @@ class ProductSearchView(generics.ListAPIView):
 
     @swagger_auto_schema(
         tags=['product'],
-        operation_description="Этот эндпоинт позволяет искать продукты по ключевым словам."
+        operation_description=(
+            "Этот эндпоинт позволяет искать продукты по ключевым словам. "
+            "Доступные поля для поиска: 'title', 'description', 'price', 'promotion', 'category__label'."
+        ),
+        manual_parameters=[
+            openapi.Parameter(
+                'search',
+                openapi.IN_QUERY,
+                description='Ключевое слово для поиска.',
+                required=True,
+                type=openapi.TYPE_STRING,
+            )
+        ],
+        responses={
+            200: openapi.Response(
+                description='ключевые поля по этим  можно искать!',
+                schema=openapi.Schema(
+                    type=openapi.TYPE_ARRAY,
+                    items=openapi.Schema(
+                        type=openapi.TYPE_OBJECT,
+                        properties={
+                            'title': openapi.Schema(type=openapi.TYPE_STRING, description='Название продукта'),
+                            'description': openapi.Schema(type=openapi.TYPE_STRING, description='Описание продукта'),
+                            'price': openapi.Schema(type=openapi.TYPE_STRING, description='Цена продукта'),
+                            'promotion': openapi.Schema(type=openapi.TYPE_STRING, description='Промо-цена продукта', nullable=True),
+                            'category__label': openapi.Schema(type=openapi.TYPE_STRING, description='Категория продукта'),
+                        },
+                    ),
+                ),
+            )
+        }
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
+    def get_serializer_context(self):
+        return {'request': self.request}
 class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
