@@ -5,7 +5,6 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework import generics
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter
-from .filters import ProductFilter
 from drf_yasg.utils import swagger_auto_schema
 from .pagination import CustomPagination
 from rest_framework.viewsets import ModelViewSet
@@ -13,7 +12,8 @@ from rest_framework.permissions import IsAuthenticated
 from product.serializers import *
 from django.db.models import Count, Avg
 from product.models import *
-
+from rest_framework.permissions import IsAuthenticated
+from .filters import ProductFilter
 
 class HomepageView(APIView):
     @swagger_auto_schema(
@@ -205,14 +205,12 @@ class ColorDetailView(generics.RetrieveUpdateDestroyAPIView):
     def delete(self, request, *args, **kwargs):
         return super().delete(request, *args, **kwargs)
 
-
 class ProductListView(generics.ListAPIView):
     queryset = Product.objects.filter(is_active=True)
     serializer_class = ProductShortSerializer
     pagination_class = CustomPagination
-    filter_backends = [DjangoFilterBackend, SearchFilter]
+    filter_backends = [DjangoFilterBackend]
     filterset_class = ProductFilter
-    search_fields = ['title', 'price', 'promotion', 'description']
 
     @swagger_auto_schema(
         tags=['product'],
@@ -227,9 +225,21 @@ class ProductListView(generics.ListAPIView):
     )
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
+
     def get_serializer_context(self):
         return {'request': self.request}
+class ProductSearchView(generics.ListAPIView):
+    queryset = Product.objects.filter(is_active=True)
+    serializer_class = ProductShortSerializer
+    filter_backends = [SearchFilter]
+    search_fields = ['title', 'description', 'price', 'promotion', 'category__label']
 
+    @swagger_auto_schema(
+        tags=['product'],
+        operation_description="Этот эндпоинт позволяет искать продукты по ключевым словам."
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
 
 class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.all()

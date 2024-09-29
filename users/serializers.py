@@ -207,11 +207,6 @@ class UserLoginSerializer(TokenObtainPairSerializer):
 
 
 
-# class UserLoginSerializer(serializers.Serializer):
-#     refresh = serializers.CharField()
-#     access = serializers.CharField()
-
-
 class UserLogoutSerializer(serializers.Serializer):
     refresh = serializers.CharField()
 
