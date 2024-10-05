@@ -1,0 +1,24 @@
+{
+    "Unknown Color": {
+        "count": 0,
+        "products": []
+    },
+    "белый": {
+        "count": 5,
+        "products": [
+            "holodilnik",
+            "motorola",
+            "vvvvv",
+            "vvvvv",
+            "vvvvv"
+        ]
+    },
+    "черный": {
+        "count": 3,
+        "products": [
+            "MF3010",
+            "kvaveb",
+            "black color"
+        ]
+    }
+}

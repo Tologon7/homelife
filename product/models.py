@@ -7,23 +7,41 @@ from config import settings
 from cloudinary.models import CloudinaryField
 from decimal import Decimal, InvalidOperation
 
+
 class Category(models.Model):
     label = models.CharField(max_length=200)
     value = models.CharField(max_length=50, blank=True, null=True)
 
+    def save(self, *args, **kwargs):
+        if not self.value:  # Проверяем, если значение не установлено
+            self.value = self.label.lower()  # Устанавливаем значение в нижнем регистре на основе метки
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return self.label
+
 
 class Brand(models.Model):
     label = models.CharField(max_length=200)
     value = models.CharField(max_length=50, blank=True, null=True)
 
+    def save(self, *args, **kwargs):
+        if not self.value:  # Проверяем, если значение не установлено
+            self.value = self.label.upper()  # Устанавливаем значение в верхнем регистре на основе метки
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return self.label
+
 
 class Color(models.Model):
     label = models.CharField(max_length=200)
     value = models.CharField(max_length=50, blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+        if not self.value:  # Проверяем, если значение не установлено
+            self.value = self.label.lower()  # Устанавливаем значение в нижнем регистре на основе метки
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.label

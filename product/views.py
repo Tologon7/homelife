@@ -16,7 +16,7 @@ from rest_framework.permissions import IsAuthenticated
 from .filters import ProductFilter
 from drf_yasg import openapi
 
-
+from django.db.models import Q
 
 class HomepageView(APIView):
     @swagger_auto_schema(
@@ -208,8 +208,9 @@ class ColorDetailView(generics.RetrieveUpdateDestroyAPIView):
     def delete(self, request, *args, **kwargs):
         return super().delete(request, *args, **kwargs)
 
+
 class ProductListView(generics.ListAPIView):
-    queryset = Product.objects.filter(is_active=True)
+    queryset = Product.objects.filter(is_active=True).order_by('id')
     serializer_class = ProductShortSerializer
     pagination_class = CustomPagination
     filter_backends = [DjangoFilterBackend]
@@ -229,9 +230,33 @@ class ProductListView(generics.ListAPIView):
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
 
-    def get_serializer_context(self):
-        return {'request': self.request}
+    def get_queryset(self):
+        queryset = super().get_queryset()
 
+        # Получаем значения фильтров из параметров запроса
+        category_value = self.request.query_params.get('category', '').strip()
+        brand_value = self.request.query_params.get('brand', '').strip()
+        color_value = self.request.query_params.get('color', '').strip()
+
+        # Инициализируем Q-объекты для комбинирования фильтров
+        filters = Q()
+
+        # Фильтрация по категории
+        if category_value:
+            filters &= Q(category__value__iexact=category_value)
+
+        # Фильтрация по бренду
+        if brand_value:
+            filters &= Q(brand__value__iexact=brand_value)
+
+        # Фильтрация по цвету
+        if color_value:
+            filters &= Q(color__value__iexact=color_value)
+
+        # Применяем комбинированные фильтры к queryset
+        queryset = queryset.filter(filters)
+
+        return queryset
 class ProductSearchView(generics.ListAPIView):
     queryset = Product.objects.filter(is_active=True)
     serializer_class = ProductShortSerializer

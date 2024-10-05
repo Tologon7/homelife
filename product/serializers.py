@@ -3,7 +3,6 @@ from django.db.models import Avg
 from .models import Product, Category, Color, Brand, Review, Banner
 from .utils import round_to_nearest_half
 
-
 class CategorySerializer(serializers.ModelSerializer):
     value = serializers.SerializerMethodField()
 
@@ -12,6 +11,7 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = ['label', 'value']
 
     def get_value(self, obj):
+        # Словарь для перевода значений на английский
         translation = {
             'холодильник': 'refrigerator',
             'стиральная машина': 'washing machine',
@@ -45,12 +45,11 @@ class CategorySerializer(serializers.ModelSerializer):
             'хлебопечка': 'bread maker',
         }
 
+        # Используем значение объекта или, если его нет, значение метки
         if obj.value:
-            return translation.get(obj.value,
-                                   obj.value)
+            return translation.get(obj.value, obj.value)
 
         return translation.get(obj.label.lower(), obj.label.lower())
-
 
 class ColorSerializer(serializers.ModelSerializer):
     value = serializers.SerializerMethodField()
@@ -60,6 +59,7 @@ class ColorSerializer(serializers.ModelSerializer):
         fields = ['label', 'value']
 
     def get_value(self, obj):
+        # Словарь для перевода значений на английский
         translation = {
             'белый': 'white',
             'черный': 'black',
@@ -84,13 +84,10 @@ class ColorSerializer(serializers.ModelSerializer):
             'малахитовый': 'malachite',
             'медный': 'copper',
             'слоновая кость': 'ivory',
-            'медный': 'copper'
         }
 
-
         if obj.value:
-            return translation.get(obj.value,
-                                   obj.value)
+            return translation.get(obj.value, obj.value)
 
         return translation.get(obj.label.lower(), obj.label.lower())
 
@@ -101,7 +98,10 @@ class BrandSerializer(serializers.ModelSerializer):
         model = Brand
         fields = ['label', 'value']
 
+
+
     def get_value(self, obj):
+        # Словарь для перевода значений на английский
         translation = {
             'Acer': 'ACER',
             'Amazon': 'AMAZON',
@@ -140,10 +140,8 @@ class BrandSerializer(serializers.ModelSerializer):
             'Xbox': 'XBOX',
         }
 
-
         if obj.value:
             return translation.get(obj.value, obj.value).upper()
-
 
         return translation.get(obj.label.lower(), obj.label).upper()
 
