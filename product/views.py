@@ -213,12 +213,13 @@ class ProductListView(generics.ListAPIView):
     queryset = Product.objects.filter(is_active=True).order_by('id')
     serializer_class = ProductShortSerializer
     pagination_class = CustomPagination
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_class = ProductFilter
+    search_fields = ['title', 'description', 'price', 'promotion', 'category__label']
 
     @swagger_auto_schema(
         tags=['product'],
-        operation_description="Этот эндпоинт позволяет получить список всех товаров."
+        operation_description="Этот эндпоинт позволяет получить список всех товаров с возможностью поиска и фильтрации."
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
@@ -237,6 +238,7 @@ class ProductListView(generics.ListAPIView):
         category_value = self.request.query_params.get('category', '').strip()
         brand_value = self.request.query_params.get('brand', '').strip()
         color_value = self.request.query_params.get('color', '').strip()
+        search_value = self.request.query_params.get('search', '').strip()
 
         # Инициализируем Q-объекты для комбинирования фильтров
         filters = Q()
@@ -253,55 +255,17 @@ class ProductListView(generics.ListAPIView):
         if color_value:
             filters &= Q(color__value__iexact=color_value)
 
+        # Если есть параметр поиска, добавляем его в фильтры
+        if search_value:
+            filters &= Q(title__icontains=search_value) | Q(description__icontains=search_value) | \
+                       Q(price__icontains=search_value) | Q(promotion__icontains=search_value) | \
+                       Q(category__label__icontains=search_value)
+
         # Применяем комбинированные фильтры к queryset
         queryset = queryset.filter(filters)
 
         return queryset
-class ProductSearchView(generics.ListAPIView):
-    queryset = Product.objects.filter(is_active=True)
-    serializer_class = ProductShortSerializer
-    filter_backends = [SearchFilter]
-    search_fields = ['title', 'description', 'price', 'promotion', 'category__label']
 
-    @swagger_auto_schema(
-        tags=['product'],
-        operation_description=(
-            "Этот эндпоинт позволяет искать продукты по ключевым словам. "
-            "Доступные поля для поиска: 'title', 'description', 'price', 'promotion', 'category__label'."
-        ),
-        manual_parameters=[
-            openapi.Parameter(
-                'search',
-                openapi.IN_QUERY,
-                description='Ключевое слово для поиска.',
-                required=True,
-                type=openapi.TYPE_STRING,
-            )
-        ],
-        responses={
-            200: openapi.Response(
-                description='ключевые поля по этим  можно искать!',
-                schema=openapi.Schema(
-                    type=openapi.TYPE_ARRAY,
-                    items=openapi.Schema(
-                        type=openapi.TYPE_OBJECT,
-                        properties={
-                            'title': openapi.Schema(type=openapi.TYPE_STRING, description='Название продукта'),
-                            'description': openapi.Schema(type=openapi.TYPE_STRING, description='Описание продукта'),
-                            'price': openapi.Schema(type=openapi.TYPE_STRING, description='Цена продукта'),
-                            'promotion': openapi.Schema(type=openapi.TYPE_STRING, description='акции', nullable=True),
-                            'category__label(name)': openapi.Schema(type=openapi.TYPE_STRING, description='Категория продукта'),
-                        },
-                    ),
-                ),
-            )
-        }
-    )
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
-
-    def get_serializer_context(self):
-        return {'request': self.request}
 class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer

@@ -12,7 +12,6 @@ urlpatterns = [
     path('colors/<int:pk>/', ColorDetailView.as_view(), name='color-detail'),
     path('homepage/', HomepageView.as_view(), name='homepage'),
     path('all/', ProductListView.as_view(), name='product-all'),
-    path('search/', ProductSearchView.as_view(), name='product-search'),
     path('<int:pk>/', ProductDetailView.as_view(), name='product-detail'),
     path('create/', ProductCreateView.as_view(), name='product-create'),
     path('new/', ProductNewView.as_view(), name='product-new'),

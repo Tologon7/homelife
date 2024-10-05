@@ -101,7 +101,6 @@ class BrandSerializer(serializers.ModelSerializer):
 
 
     def get_value(self, obj):
-        # Словарь для перевода значений на английский
         translation = {
             'Acer': 'ACER',
             'Amazon': 'AMAZON',
