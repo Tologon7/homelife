@@ -15,8 +15,8 @@ from product.models import *
 from rest_framework.permissions import IsAuthenticated
 from .filters import ProductFilter
 from drf_yasg import openapi
-
 from django.db.models import Q
+from decimal import Decimal
 
 class HomepageView(APIView):
     @swagger_auto_schema(
@@ -243,17 +243,20 @@ class ProductListView(generics.ListAPIView):
         # Инициализируем Q-объекты для комбинирования фильтров
         filters = Q()
 
-        # Фильтрация по категории
+        # Фильтрация по существующим категориям
         if category_value:
-            filters &= Q(category__value__iexact=category_value)
+            if Category.objects.filter(value__iexact=category_value).exists():
+                filters &= Q(category__value__iexact=category_value)
 
-        # Фильтрация по бренду
+        # Фильтрация по существующим брендам
         if brand_value:
-            filters &= Q(brand__value__iexact=brand_value)
+            if Brand.objects.filter(value__iexact=brand_value).exists():
+                filters &= Q(brand__value__iexact=brand_value)
 
-        # Фильтрация по цвету
+        # Фильтрация по существующим цветам
         if color_value:
-            filters &= Q(color__value__iexact=color_value)
+            if Color.objects.filter(value__iexact=color_value).exists():
+                filters &= Q(color__value__iexact=color_value)
 
         # Если есть параметр поиска, добавляем его в фильтры
         if search_value:
@@ -266,27 +269,23 @@ class ProductListView(generics.ListAPIView):
 
         return queryset
 
+
 class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-
-    def get_object(self):
-        product = super().get_object()
-        product.similar_products = self.get_similar_products(product)
-        return product
 
     @swagger_auto_schema(
         tags=['product'],
         operation_description="Этот эндпоинт позволяет посмотреть похожие товары, "
                               "на товар который мы выбрали через ID, "
-                              "схожость выбирается по категории и по цене товара."
+                              "схожесть выбирается по категории и по цене товара."
     )
     def get_similar_products(self, product):
-            # Convert price to Decimal for accurate arithmetic operations
+        # Преобразуем цену в Decimal для точных арифметических операций
         price = Decimal(product.price)
         price_range = Decimal('0.2') * price
 
-            # Query for similar products
+        # Запрос для получения похожих товаров
         similar_products = Product.objects.filter(
             category=product.category
         ).exclude(id=product.id).filter(
@@ -294,7 +293,7 @@ class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
             price__lte=price + price_range
         ).distinct()
 
-            # Serialize similar products
+        # Сериализация похожих товаров
         serializer = ProductShortSerializer(similar_products, many=True, context=self.get_serializer_context())
         return serializer.data
 
@@ -303,9 +302,9 @@ class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
         operation_description="Этот эндпоинт позволяет получить, обновить или удалить продукт по ID."
     )
     def get(self, request, *args, **kwargs):
-        response = super().get(request, *args, **kwargs)
-        data = response.data
-        data['similar_products'] = self.get_object().similar_products
+        product = self.get_object()  # Получаем объект продукта
+        data = ProductSerializer(product).data  # Сериализуем его данные
+        data['similar_products'] = self.get_similar_products(product)  # Получаем похожие товары
         return Response(data)
 
     @swagger_auto_schema(
@@ -321,8 +320,6 @@ class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
     )
     def delete(self, request, *args, **kwargs):
         return super().delete(request, *args, **kwargs)
-
-
 class ProductNewView(generics.ListAPIView):
     queryset = Product.objects.filter(is_active=True)
     serializer_class = ProductShortSerializer
@@ -393,7 +390,7 @@ class ProductPopularView(generics.ListAPIView):
 
 
 class ProductCreateView(generics.CreateAPIView):
-    queryset = Product.objects.filter(id=1)
+    queryset = Product.objects.all()
     serializer_class = ProductCreateSerializer
 
     @swagger_auto_schema(

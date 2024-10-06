@@ -33,11 +33,8 @@ class Gender(models.Model):
     def __str__(self):
         return self.title
 
-
 class User(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(max_length=255)
-    first_name = models.CharField(max_length=255)
-    last_name = models.CharField(max_length=255)
     gender = models.ForeignKey(Gender, on_delete=models.CASCADE, blank=True, null=True)
     age = models.IntegerField(blank=True, null=True)
     email = models.EmailField(unique=True)
@@ -46,17 +43,19 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 
-    #for wholesaler
+    # for wholesaler
     otp_code = models.CharField(max_length=6, null=True, blank=True)
     otp_created_at = models.DateTimeField(null=True, blank=True)
 
     objects = CustomUserManager()
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['first_name', 'last_name']
+    REQUIRED_FIELDS = []
 
     def __str__(self):
         return self.email
+
+
 
 
 class OTP(models.Model):

@@ -4,19 +4,12 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from django.core.validators import RegexValidator
-from django.contrib.auth.hashers import check_password
-from rest_framework import serializers
-from users.models import User, OTP
-import re
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.core.mail import send_mail
 from django.contrib.auth.hashers import make_password
-from django.contrib.auth import get_user_model
 import random
 from datetime import timedelta
 from django.utils import timezone
-
+import re
 
 class PasswordMixinRegister(serializers.Serializer):
     password = serializers.CharField(write_only=True, required=True)
@@ -52,58 +45,46 @@ class PasswordMixin(serializers.Serializer):
         return attrs
 
 
-
-# profile
+# Profile
 class UserSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
-        validators=[
-            RegexValidator(
-                regex=r'^[a-zA-Z0-9!@#$%^&*()_+.-]+$',
-                message='Username can only contain English letters, numbers, and special characters (!@#$%^&*()_+.-)',
-            ),
-        ],
+        validators=[RegexValidator(
+            regex=r'^[a-zA-Z0-9!@#$%^&*()_+.-]+$',
+            message='Username can only contain English letters, numbers, and special characters (!@#$%^&*()_+.-)',
+        )],
         min_length=6,
         max_length=20,
     )
     email = serializers.EmailField()
-    first_name = serializers.CharField()
-    last_name = serializers.CharField()
     number = serializers.IntegerField()
     wholesaler = serializers.BooleanField()
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'first_name', 'last_name', 'gender', 'age', 'email', 'number', 'wholesaler']
+        fields = ['id', 'username', 'gender', 'age', 'email', 'number', 'wholesaler']
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
-        validators=[
-            RegexValidator(
-                regex=r'^[a-zA-Z0-9!@#$%^&*()_+.-]+$',
-                message='Username can only contain English letters, numbers, and special characters (!@#$%^&*()_+.-)',
-            ),
-        ],
+        validators=[RegexValidator(
+            regex=r'^[a-zA-Z0-9!@#$%^&*()_+.-]+$',
+            message='Username can only contain English letters, numbers, and special characters (!@#$%^&*()_+.-)',
+        )],
         min_length=6,
         max_length=20,
         required=False
     )
-
     email = serializers.EmailField(required=False)
-    first_name = serializers.CharField(required=False)
-    last_name = serializers.CharField(required=False)
     age = serializers.IntegerField(required=False)
     number = serializers.IntegerField(required=False)
     wholesaler = serializers.BooleanField(required=False)
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'first_name', 'last_name', 'gender', 'age', 'email', 'number', 'wholesaler']
+        fields = ['id', 'username', 'gender', 'age', 'email', 'number', 'wholesaler']
 
     def update(self, instance, validated_data):
         instance.username = validated_data.get('username', instance.username)
-        instance.first_name = validated_data.get('first_name', instance.first_name)
-        instance.last_name = validated_data.get('last_name', instance.last_name)
         instance.age = validated_data.get('age', instance.age)
         instance.email = validated_data.get('email', instance.email)
         instance.number = validated_data.get('number', instance.number)
@@ -113,25 +94,22 @@ class UserProfileSerializer(serializers.ModelSerializer):
         return instance
 
 
-# register
+# Register
 class UserRegistrationSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
-        validators=[
-            RegexValidator(
-                regex=r'^[a-zA-Z0-9!@#$%^&*()_+.-]+$',
-                message='Username can only contain English letters, numbers, and special characters (!@#$%%^&*()_+.-)',
-            ),
-        ],
+        validators=[RegexValidator(
+            regex=r'^[a-zA-Z0-9!@#$%^&*()_+.-]+$',
+            message='Username can only contain English letters, numbers, and special characters (!@#$%^&*()_+.-)',
+        )],
         min_length=6,
         max_length=20,
-        required=False
     )
     password = serializers.CharField(write_only=True)
     wholesaler = serializers.BooleanField(required=False, default=False)
 
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'gender', 'age', 'email', 'username', 'number', 'wholesaler', 'password']
+        fields = [ 'username', 'email', 'gender', 'age', 'number', 'wholesaler', 'password']
 
     def create(self, validated_data):
         wholesaler = validated_data.pop('wholesaler', False)
@@ -147,7 +125,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             # Отправка OTP-кода на администраторский email
             send_mail(
                 'Новый ОПТОВЫЙ ПОКУПАТЕЛЬ!',
-                f"Имя: {validated_data['first_name']} {validated_data['last_name']} хочет зарегестрироваться как новый оптовик.\nEmail: {validated_data['email']}\nНомер телефона: {validated_data['number']}\nКод: {otp_code}",
+                f"Пользователь с именем {validated_data['username']} хочет зарегистрироваться как новый оптовик.\nEmail: {validated_data['email']}\nНомер телефона: {validated_data['number']}\nКод: {otp_code}",
                 'email',  # Замените на ваш email
                 ['homelife.site.kg@gmail.com'],  # Замените на email администратора
                 fail_silently=False,
@@ -206,7 +184,6 @@ class UserLoginSerializer(TokenObtainPairSerializer):
         return data
 
 
-
 class UserLogoutSerializer(serializers.Serializer):
     refresh = serializers.CharField()
 
@@ -219,7 +196,7 @@ class UserLogoutSerializer(serializers.Serializer):
         return attrs
 
 
-# forgot password
+# Forgot password
 class ForgotPasswordSerializer(serializers.Serializer):
     email = serializers.EmailField()
 
@@ -243,10 +220,7 @@ class ConfirmationCodeSerializer(serializers.Serializer):
 class ChangeForgotPasswordSerializer(serializers.ModelSerializer, PasswordMixin):
     class Meta:
         model = User
-        fields = [
-            'password',
-            'confirm_password',
-        ]
+        fields = ['password', 'confirm_password']
 
 
 class ChangePasswordSerializer(serializers.ModelSerializer, PasswordMixin):
@@ -274,8 +248,6 @@ class UserListSerializer(serializers.ModelSerializer):
             "last_login",
             "is_superuser",
             "username",
-            "first_name",
-            "last_name",
             "age",
             "email",
             "number",

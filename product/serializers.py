@@ -1,7 +1,8 @@
 from rest_framework import serializers
 from django.db.models import Avg
-from .models import Product, Category, Color, Brand, Review, Banner
+from .models import Product, Category, Color, Brand, Review, Banner, Characteristic
 from .utils import round_to_nearest_half
+
 
 class CategorySerializer(serializers.ModelSerializer):
     value = serializers.SerializerMethodField()
@@ -51,6 +52,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
         return translation.get(obj.label.lower(), obj.label.lower())
 
+
 class ColorSerializer(serializers.ModelSerializer):
     value = serializers.SerializerMethodField()
 
@@ -86,9 +88,12 @@ class ColorSerializer(serializers.ModelSerializer):
             'слоновая кость': 'ivory',
         }
 
+        # Проверяем, есть ли значение
         if obj.value:
+            # Возвращаем значение на английском, если оно есть в словаре
             return translation.get(obj.value, obj.value)
 
+        # Если значения нет, возвращаем значение на английском по label
         return translation.get(obj.label.lower(), obj.label.lower())
 
 class BrandSerializer(serializers.ModelSerializer):
@@ -151,7 +156,6 @@ class ReviewSummarySerializer(serializers.ModelSerializer):
 
 
 
-
 class ProductSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
     color = ColorSerializer(read_only=True)
@@ -159,6 +163,7 @@ class ProductSerializer(serializers.ModelSerializer):
     reviews = ReviewSummarySerializer(many=True, read_only=True)
     avg_rating = serializers.SerializerMethodField()
     images = serializers.SerializerMethodField()
+
 
     class Meta:
         model = Product
@@ -177,6 +182,7 @@ class ProductSerializer(serializers.ModelSerializer):
             'reviews',
             'avg_rating',
             'is_active',
+            'characteristics',
         ]
 
     def get_avg_rating(self, obj):
@@ -192,9 +198,7 @@ class ProductSerializer(serializers.ModelSerializer):
             obj.image2.url if obj.image2 else None,
             obj.image3.url if obj.image3 else None,
         ]
-        if request:
-            return [request.build_absolute_uri(image) for image in images if image]
-        return [image for image in images if image]
+        return [request.build_absolute_uri(image) for image in images if image] if request else images
 
 
 class ProductShortSerializer(serializers.ModelSerializer):
@@ -230,7 +234,17 @@ class ProductShortSerializer(serializers.ModelSerializer):
         return [image for image in images if image]
 
 
+class CharacteristicSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Characteristic
+        fields = ['key', 'value']
+
+
+
+
 class ProductCreateSerializer(serializers.ModelSerializer):
+    characteristics = CharacteristicSerializer(many=True)
+
     class Meta:
         model = Product
         fields = [
@@ -247,7 +261,7 @@ class ProductCreateSerializer(serializers.ModelSerializer):
             'quantity',
             'description',
             'is_product_of_the_day',
-            # 'is_active'
+            'characteristics'
         ]
 
     def to_representation(self, instance):
@@ -264,6 +278,13 @@ class ProductCreateSerializer(serializers.ModelSerializer):
             representation.pop('reviews', None)
         return representation
 
+    def create(self, validated_data):
+        characteristics_data = validated_data.pop('characteristics', [])
+        product = Product.objects.create(**validated_data)
+        for characteristic_data in characteristics_data:
+            characteristic, created = Characteristic.objects.get_or_create(**characteristic_data)
+            product.characteristics.add(characteristic)
+        return product
 
 class ReviewSerializer(serializers.ModelSerializer):
 

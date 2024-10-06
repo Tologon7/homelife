@@ -1,20 +1,23 @@
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.core.exceptions import ValidationError
-from django.db import models
 
 from config import settings
 from cloudinary.models import CloudinaryField
-from decimal import Decimal, InvalidOperation
 
 
 class Category(models.Model):
-    label = models.CharField(max_length=200)
+    label = models.CharField(max_length=200, unique=True)
     value = models.CharField(max_length=50, blank=True, null=True)
 
     def save(self, *args, **kwargs):
-        if not self.value:  # Проверяем, если значение не установлено
-            self.value = self.label.lower()  # Устанавливаем значение в нижнем регистре на основе метки
+        if not self.value:
+            self.value = self.label.lower()
+
+        # Проверяем, существует ли уже категория с таким label
+        if Category.objects.filter(label=self.label).exclude(pk=self.pk).exists():
+            raise ValidationError("Category with this label already exists.")
+
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -22,12 +25,12 @@ class Category(models.Model):
 
 
 class Brand(models.Model):
-    label = models.CharField(max_length=200)
+    label = models.CharField(max_length=200, unique=True)
     value = models.CharField(max_length=50, blank=True, null=True)
 
     def save(self, *args, **kwargs):
-        if not self.value:  # Проверяем, если значение не установлено
-            self.value = self.label.upper()  # Устанавливаем значение в верхнем регистре на основе метки
+        if not self.value:
+            self.value = self.label.upper()
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -35,30 +38,33 @@ class Brand(models.Model):
 
 
 class Color(models.Model):
-    label = models.CharField(max_length=200)
+    label = models.CharField(max_length=200, unique=True)
     value = models.CharField(max_length=50, blank=True, null=True)
 
     def save(self, *args, **kwargs):
-        if not self.value:  # Проверяем, если значение не установлено
-            self.value = self.label.lower()  # Устанавливаем значение в нижнем регистре на основе метки
+        if not self.value:
+            self.value = self.label.lower()
         super().save(*args, **kwargs)
 
     def __str__(self):
         return self.label
+
+
 class Product(models.Model):
-    title = models.CharField(max_length=255, )
-    image1 = models.ImageField(upload_to='images/', )
-    image2 = models.ImageField(upload_to='images/', )
-    image3 = models.ImageField(upload_to='images/', )
-    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products',  null=True, blank=True)
+    title = models.CharField(max_length=255)
+    image1 = models.ImageField(upload_to='images/')
+    image2 = models.ImageField(upload_to='images/')
+    image3 = models.ImageField(upload_to='images/')
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products', null=True, blank=True)
     color = models.ForeignKey(Color, on_delete=models.CASCADE, null=True, blank=True)
-    price = models.DecimalField(max_digits=10, decimal_places=2, )
+    price = models.DecimalField(max_digits=10, decimal_places=2)
     promotion = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     brand = models.ForeignKey(Brand, on_delete=models.CASCADE, related_name='products', null=True, blank=True)
     quantity = models.IntegerField()
-    description = models.TextField(max_length=2551, )
-    is_product_of_the_day = models.BooleanField(default=False,)
-    is_active = models.BooleanField(default=True,)
+    description = models.TextField(max_length=2551)
+    is_product_of_the_day = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    characteristics = models.ManyToManyField('Characteristic', related_name='products', blank=True)
 
     def save(self, *args, **kwargs):
         if self.quantity == 0:
@@ -68,9 +74,21 @@ class Product(models.Model):
     def __str__(self):
         return self.title
 
+class Characteristic(models.Model):
+    key = models.CharField(max_length=255)
+    value = models.CharField(max_length=255)
+
+    def __str__(self):
+        return f"{self.key}: {self.value}"
+
+
+
+
+
+
+
 
 class Review(models.Model):
-
     RATING_CHOICES = [
         (1, '1 star'),
         (1.5, '1.5 star'),
@@ -97,12 +115,6 @@ class Review(models.Model):
     created = models.DateTimeField(auto_now_add=True, verbose_name="Date Created")
     updated = models.DateTimeField(auto_now=True, verbose_name="Date Updated")
 
-    def clean(self):
-        super().clean()  # Always call the parent class's `clean` method.
-        # Дополнительная проверка на корректность рейтинга (можно убрать, если используется только choices)
-        if self.rating not in dict(self.RATING_CHOICES).keys():
-            raise ValidationError("Invalid rating value. It must be one of the predefined choices.")
-
     def __str__(self):
         return f'Review by {self.user} for {self.product} - Rating: {self.rating}'
 
@@ -111,4 +123,4 @@ class Banner(models.Model):
     image = models.ImageField(upload_to='images/')
 
     def __str__(self):
-        return self.image
+        return str(self.image)
