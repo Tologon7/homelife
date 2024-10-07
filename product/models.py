@@ -52,9 +52,9 @@ class Color(models.Model):
 
 class Product(models.Model):
     title = models.CharField(max_length=255)
-    image1 = models.ImageField(upload_to='images/')
-    image2 = models.ImageField(upload_to='images/')
-    image3 = models.ImageField(upload_to='images/')
+    image1 = CloudinaryField('image')
+    image2 = CloudinaryField('image')
+    image3 = CloudinaryField('image')
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products', null=True, blank=True)
     color = models.ForeignKey(Color, on_delete=models.CASCADE, null=True, blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)

@@ -9,6 +9,7 @@ import certifi
 import os
 from corsheaders.defaults import default_headers
 
+
 os.environ['SSL_CERT_FILE'] = certifi.where()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -228,13 +229,12 @@ CORS_ALLOW_METHODS = [
 
 
 CORS_ALLOW_ALL_ORIGINS = True
-
-# Настройки Cloudinary
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME'),
     'API_KEY': config('CLOUDINARY_API_KEY'),
     'API_SECRET': config('CLOUDINARY_API_SECRET')
 }
 
-MEDIA_URL = '/media/'
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+MEDIA_URL = '/media/'

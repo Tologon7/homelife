@@ -118,16 +118,16 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         otp_code = None
         if wholesaler:
             otp_code = str(random.randint(100000, 999999))
-            validated_data['is_active'] = False  # Деактивируем пользователя до верификации
+            validated_data['is_active'] = False
             validated_data['otp_code'] = otp_code
             validated_data['otp_created_at'] = timezone.now()
 
-            # Отправка OTP-кода на администраторский email
+
             send_mail(
                 'Новый ОПТОВЫЙ ПОКУПАТЕЛЬ!',
                 f"Пользователь с именем {validated_data['username']} хочет зарегистрироваться как новый оптовик.\nEmail: {validated_data['email']}\nНомер телефона: {validated_data['number']}\nКод: {otp_code}",
-                'email',  # Замените на ваш email
-                ['homelife.site.kg@gmail.com'],  # Замените на email администратора
+                'email',
+                ['homelife.site.kg@gmail.com'],
                 fail_silently=False,
             )
 
@@ -170,9 +170,9 @@ class WholesalerOTPVerificationSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         user = validated_data.get('user')
-        user.is_active = True  # Активируем пользователя
-        user.otp_code = None  # Очистка OTP после успешной верификации
-        user.otp_created_at = None  # Очистка времени создания OTP
+        user.is_active = True
+        user.otp_code = None
+        user.otp_created_at = None
         user.save()
         return user
 
