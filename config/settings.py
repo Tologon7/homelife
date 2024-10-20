@@ -111,6 +111,21 @@ DATABASES["default"] = dj_database_url.parse("postgresql://homelifedb_g0l5_user:
 
 # Password validationuth-password-validators
 
+
+
+
+SECRET_KEY = config('SECRET_KEY')
+DEBUG = config('DEBUG', default=False, cast=bool)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+CLOUD_NAME = config('CLOUD_NAME')
+API_KEY = config('API_KEY')
+API_SECRET = config('API_SECRET')
+DB_PORT = config('DB_PORT', default='5432')
+CLOUDINARY_CLOUD_NAME = config('CLOUDINARY_CLOUD_NAME')
+CLOUDINARY_API_KEY = config('CLOUDINARY_API_KEY')
+CLOUDINARY_API_SECRET = config('CLOUDINARY_API_SECRET')
+
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
