@@ -3,7 +3,6 @@ from django.db.models import Avg
 from .models import Product, Category, Color, Brand, Review, Banner, Characteristic
 from .utils import round_to_nearest_half
 
-
 class CategorySerializer(serializers.ModelSerializer):
     value = serializers.SerializerMethodField()
 
@@ -12,7 +11,6 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = ['label', 'value']
 
     def get_value(self, obj):
-        # Словарь для перевода значений на английский
         translation = {
             'холодильник': 'refrigerator',
             'стиральная машина': 'washing machine',
@@ -46,12 +44,53 @@ class CategorySerializer(serializers.ModelSerializer):
             'хлебопечка': 'bread maker',
         }
 
-        # Используем значение объекта или, если его нет, значение метки
+        # Если значение value уже есть
         if obj.value:
             return translation.get(obj.value, obj.value)
 
+        # Если value нет, присваиваем его на основе label
         return translation.get(obj.label.lower(), obj.label.lower())
 
+    def create(self, validated_data):
+        label = validated_data.get('label')
+
+        translation = {
+            'холодильник': 'refrigerator',
+            'стиральная машина': 'washing machine',
+            'посудомоечная машина': 'dishwasher',
+            'микроволновая печь': 'microwave',
+            'телевизор': 'television',
+            'пылесос': 'vacuum cleaner',
+            'кондиционер': 'air conditioner',
+            'печь': 'oven',
+            'фен': 'hair dryer',
+            'тостер': 'toaster',
+            'кофеварка': 'coffee maker',
+            'электрический чайник': 'electric kettle',
+            'утюг': 'iron',
+            'блендер': 'blender',
+            'соковыжималка': 'juicer',
+            'сушилка для белья': 'clothes dryer',
+            'кухонный комбайн': 'food processor',
+            'вентилятор': 'fan',
+            'холодильная камера': 'cold storage',
+            'водонагреватель': 'water heater',
+            'мясорубка': 'meat grinder',
+            'вафельница': 'waffle maker',
+            'суповарка': 'soup maker',
+            'электрическая духовка': 'electric oven',
+            'мясопереработчик': 'meat slicer',
+            'бассейн': 'pool',
+            'система фильтрации воды': 'water filtration system',
+            'кухонные весы': 'kitchen scale',
+            'размораживатель': 'defroster',
+            'хлебопечка': 'bread maker',
+        }
+
+        # Присваиваем value на основе label
+        validated_data['value'] = translation.get(label.lower(), label.lower())
+
+        return super().create(validated_data)
 
 class ColorSerializer(serializers.ModelSerializer):
     value = serializers.SerializerMethodField()
@@ -96,14 +135,46 @@ class ColorSerializer(serializers.ModelSerializer):
         # Если значения нет, возвращаем значение на английском по label
         return translation.get(obj.label.lower(), obj.label.lower())
 
+    def create(self, validated_data):
+        label = validated_data.get('label').lower()
+
+        # Словарь для перевода значений на английский
+        translation = {
+            'белый': 'white',
+            'черный': 'black',
+            'красный': 'red',
+            'синий': 'blue',
+            'зеленый': 'green',
+            'желтый': 'yellow',
+            'оранжевый': 'orange',
+            'пурпурный': 'purple',
+            'розовый': 'pink',
+            'серый': 'gray',
+            'коричневый': 'brown',
+            'бежевая': 'beige',
+            'фиолетовый': 'violet',
+            'голубой': 'light blue',
+            'бирюзовый': 'turquoise',
+            'мятный': 'mint',
+            'лавандовый': 'lavender',
+            'гранатовый': 'pomegranate',
+            'песочный': 'sand',
+            'оливковый': 'olive',
+            'малахитовый': 'malachite',
+            'медный': 'copper',
+            'слоновая кость': 'ivory',
+        }
+
+        # Присваиваем value на основе label
+        validated_data['value'] = translation.get(label, label)
+
+        return super().create(validated_data)
 class BrandSerializer(serializers.ModelSerializer):
     value = serializers.SerializerMethodField()
 
     class Meta:
         model = Brand
         fields = ['label', 'value']
-
-
 
     def get_value(self, obj):
         translation = {
@@ -144,10 +215,58 @@ class BrandSerializer(serializers.ModelSerializer):
             'Xbox': 'XBOX',
         }
 
+        # Если значение value уже есть
         if obj.value:
             return translation.get(obj.value, obj.value).upper()
 
-        return translation.get(obj.label.lower(), obj.label).upper()
+        # Если value нет, присваиваем его на основе label
+        return translation.get(obj.label, obj.label).upper()
+
+    def create(self, validated_data):
+        label = validated_data.get('label')
+
+        translation = {
+            'Acer': 'ACER',
+            'Amazon': 'AMAZON',
+            'Apple': 'APPLE',
+            'Asus': 'ASUS',
+            'Barnes & Noble': 'BARNES & NOBLE',
+            'Blackberry': 'BLACKBERRY',
+            'Bosch': 'BOSCH',
+            'Bose': 'BOSE',
+            'Canon': 'CANON',
+            'Dell': 'DELL',
+            'Denon': 'DENON',
+            'Garmin': 'GARMIN',
+            'Hewlett Packard': 'HEWLETT PACKARD',
+            'Htc': 'HTC',
+            'Lenovo': 'LENOVO',
+            'LG': 'LG',
+            'Microsoft': 'MICROSOFT',
+            'Motorola': 'MOTOROLA',
+            'Newegg': 'NEWEGG',
+            'Nexus': 'NEXUS',
+            'Nikon': 'NIKON',
+            'Nokia': 'NOKIA',
+            'Olloclip': 'OLLOCLIP',
+            'Olympus': 'OLYMPUS',
+            'Panasonic': 'PANASONIC',
+            'Philips': 'PHILIPS',
+            'Pioneer': 'PIONEER',
+            'Radioshack': 'RADIOSHACK',
+            'Ricoh': 'RICOH',
+            'Samsung': 'SAMSUNG',
+            'Sharp': 'SHARP',
+            'Sony': 'SONY',
+            'Tomtom': 'TOMTOM',
+            'Toshiba': 'TOSHIBA',
+            'Xbox': 'XBOX',
+        }
+
+        # Присваиваем value на основе label
+        validated_data['value'] = translation.get(label, label).upper()
+
+        return super().create(validated_data)
 
 class ReviewSummarySerializer(serializers.ModelSerializer):
     class Meta:

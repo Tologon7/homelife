@@ -8,7 +8,7 @@ from decouple import config
 import certifi
 import os
 from corsheaders.defaults import default_headers
-
+import dj_database_url
 
 os.environ['SSL_CERT_FILE'] = certifi.where()
 
@@ -99,9 +99,6 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/5.0/ref/settings/#databases
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -109,9 +106,10 @@ DATABASES = {
     }
 }
 
+# Замените 'ostgresql' на 'postgresql' в строке подключения
+DATABASES["default"] = dj_database_url.parse("postgresql://homelifedb_g0l5_user:iBCHEShlUcVLtCGDWby4uEHXHjB2GZFY@dpg-cs5rvntumphs73b1oc00-a.oregon-postgres.render.com/homelifedb_g0l5")
 
-# Password validation
-# https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
+# Password validationuth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
