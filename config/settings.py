@@ -100,18 +100,8 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.parse("postgresql://homelifedb_g0l5_user:iBCHEShlUcVLtCGDWby4uEHXHjB2GZFY@dpg-cs5rvntumphs73b1oc00-a.oregon-postgres.render.com/homelifedb_g0l5")
 }
-
-# Замените 'ostgresql' на 'postgresql' в строке подключения
-DATABASES["default"] = dj_database_url.parse("postgresql://homelifedb_g0l5_user:iBCHEShlUcVLtCGDWby4uEHXHjB2GZFY@dpg-cs5rvntumphs73b1oc00-a.oregon-postgres.render.com/homelifedb_g0l5")
-
-# Password validationuth-password-validators
-
-
 
 
 SECRET_KEY = config('SECRET_KEY')
@@ -158,7 +148,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
