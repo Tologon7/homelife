@@ -281,7 +281,7 @@ class ProductSerializer(serializers.ModelSerializer):
     brand = BrandSerializer(read_only=True)
     reviews = ReviewSummarySerializer(many=True, read_only=True)
     avg_rating = serializers.SerializerMethodField()
-
+    images = serializers.SerializerMethodField()
 
 
     class Meta:
