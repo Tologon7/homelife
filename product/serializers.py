@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.db.models import Avg
-from .models import Product, Category, Color, Brand, Review, Banner, Characteristic
+from .models import Product, Category, Color, Brand, Review, Banner
 from .utils import round_to_nearest_half
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -281,7 +281,7 @@ class ProductSerializer(serializers.ModelSerializer):
     brand = BrandSerializer(read_only=True)
     reviews = ReviewSummarySerializer(many=True, read_only=True)
     avg_rating = serializers.SerializerMethodField()
-    images = serializers.SerializerMethodField()
+
 
 
     class Meta:
@@ -301,7 +301,7 @@ class ProductSerializer(serializers.ModelSerializer):
             'reviews',
             'avg_rating',
             'is_active',
-            'characteristics',
+
         ]
 
     def get_avg_rating(self, obj):
@@ -353,16 +353,11 @@ class ProductShortSerializer(serializers.ModelSerializer):
         return [image for image in images if image]
 
 
-class CharacteristicSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Characteristic
-        fields = ['key', 'value']
-
 
 
 
 class ProductCreateSerializer(serializers.ModelSerializer):
-    characteristics = CharacteristicSerializer(many=True)
+
 
     class Meta:
         model = Product
@@ -380,7 +375,7 @@ class ProductCreateSerializer(serializers.ModelSerializer):
             'quantity',
             'description',
             'is_product_of_the_day',
-            'characteristics'
+
         ]
 
     def to_representation(self, instance):

@@ -9,6 +9,9 @@ import certifi
 import os
 from corsheaders.defaults import default_headers
 import dj_database_url
+import cloudinary
+# import cloudinary.uploader
+# import cloudinary.api
 
 os.environ['SSL_CERT_FILE'] = certifi.where()
 
@@ -45,8 +48,8 @@ INSTALLED_APPS = [
     'django_filters',
     'decouple',
     'drf_yasg',
-    'cloudinary',
-    'cloudinary_storage',
+    # 'cloudinary',
+    # 'cloudinary_storage',
     'corsheaders',
     #auth
     'rest_framework.authtoken',
@@ -238,12 +241,13 @@ CORS_ALLOW_METHODS = [
 
 
 CORS_ALLOW_ALL_ORIGINS = True
-CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME'),
-    'API_KEY': config('CLOUDINARY_API_KEY'),
-    'API_SECRET': config('CLOUDINARY_API_SECRET')
-}
 
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+# CLOUDINARY_STORAGE = {
+#     'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME'),
+#     'API_KEY': config('CLOUDINARY_API_KEY'),
+#     'API_SECRET': config('CLOUDINARY_API_SECRET')
+# }
 
 MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
