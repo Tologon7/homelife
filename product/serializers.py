@@ -353,11 +353,7 @@ class ProductShortSerializer(serializers.ModelSerializer):
         return [image for image in images if image]
 
 
-
-
-
 class ProductCreateSerializer(serializers.ModelSerializer):
-
 
     class Meta:
         model = Product
@@ -392,6 +388,8 @@ class ProductCreateSerializer(serializers.ModelSerializer):
             representation.pop('reviews', None)
         return representation
 
+
+
     def create(self, validated_data):
         characteristics_data = validated_data.pop('characteristics', [])
         product = Product.objects.create(**validated_data)
@@ -399,7 +397,6 @@ class ProductCreateSerializer(serializers.ModelSerializer):
             characteristic, created = Characteristic.objects.get_or_create(**characteristic_data)
             product.characteristics.add(characteristic)
         return product
-
 class ReviewSerializer(serializers.ModelSerializer):
 
     product_title = serializers.SerializerMethodField()

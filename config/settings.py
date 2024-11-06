@@ -18,7 +18,7 @@ os.environ['SSL_CERT_FILE'] = certifi.where()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
@@ -248,6 +248,6 @@ CORS_ALLOW_ALL_ORIGINS = True
 #     'API_KEY': config('CLOUDINARY_API_KEY'),
 #     'API_SECRET': config('CLOUDINARY_API_SECRET')
 # }
-
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
