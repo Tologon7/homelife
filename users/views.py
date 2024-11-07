@@ -37,6 +37,15 @@ from rest_framework import status
 from rest_framework.response import Response
 
 
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework import status
+from rest_framework_simplejwt.tokens import AccessToken
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
+
+
 class UserMeView(generics.RetrieveAPIView):
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
@@ -332,38 +341,44 @@ class UserListView(generics.ListAPIView):
         return User.objects.all().order_by('-id').filter(is_active=True)
 
 
-class CustomTokenRefreshView(TokenRefreshView):
-    permission_classes = [IsAuthenticated]  # Только аутентифицированные пользователи
+
+class CustomTokenRefreshView(APIView):
+    permission_classes = [IsAuthenticated]
 
     @swagger_auto_schema(
-        operation_description="Обновление токенов с использованием refresh-токена.",
+        operation_description="Обновление токенов с использованием access-токена.",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'access': openapi.Schema(type=openapi.TYPE_STRING, description='Access token', minLength=1),
+            },
+            required=['access'],
+        ),
         responses={
             200: openapi.Response(
                 description="Успешное обновление токена",
                 examples={
                     "application/json": {
-                        "access": "new-access-token"
+                        "access": "new-access-token"  # Новый access токен
                     }
                 }
             ),
             400: openapi.Response(
-                description="Неверный или истекший refresh-токен"
+                description="Неверный или истекший токен"
             ),
         }
     )
     def post(self, request, *args, **kwargs):
-        """
+        """Обработка запроса для обновления токенов с использованием access токена."""
+        access_token = request.data.get('access')
 
-        """
-        refresh_token = request.data.get('refresh')
-        if not refresh_token:
-            return Response({"detail": "Refresh token is required."}, status=status.HTTP_400_BAD_REQUEST)
+        if not access_token:
+            return Response({"detail": "Access token is required."}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            # Попробуем загрузить refresh токен
-            token = RefreshToken(refresh_token)
-            # Генерируем новый access токен
-            new_access_token = token.access_token
+            # Проверка валидности access токена
+            token = AccessToken(access_token)
+            new_access_token = AccessToken.for_user(token.user)
 
             return Response({"access": str(new_access_token)}, status=status.HTTP_200_OK)
         except Exception as e:
