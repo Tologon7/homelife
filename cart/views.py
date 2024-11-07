@@ -63,7 +63,7 @@ class CartView(APIView):
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
-                'product  id ': openapi.Schema(type=openapi.TYPE_INTEGER, description="ID товара", required=['product']),
+                'product/id ': openapi.Schema(type=openapi.TYPE_INTEGER, description="ID товара", required=['product']),
                 'quantity': openapi.Schema(type=openapi.TYPE_INTEGER, description="Количество товара",
                                            required=['quantity']),
             },
