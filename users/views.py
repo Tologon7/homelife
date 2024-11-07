@@ -24,7 +24,11 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
+from drf_yasg import openapi
 from decouple import config
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework import status
+from rest_framework.response import Response
 
 
 class UserMeView(generics.RetrieveAPIView):
@@ -320,3 +324,83 @@ class UserListView(generics.ListAPIView):
 
     def get_queryset(self):
         return User.objects.all().order_by('-id').filter(is_active=True)
+
+
+
+
+class CustomTokenRefreshView(TokenRefreshView):
+    permission_classes = [IsAuthenticated]  # Только аутентифицированные пользователи
+
+    @swagger_auto_schema(
+        operation_description="Обновление токенов с использованием refresh-токена.",
+        responses={
+            200: openapi.Response(
+                description="Успешное обновление токена",
+                examples={
+                    "application/json": {
+                        "access": "new-access-token"
+                    }
+                }
+            ),
+            400: openapi.Response(
+                description="Неверный или истекший refresh-токен"
+            ),
+        }
+    )
+    def post(self, request, *args, **kwargs):
+        """
+        Обработка POST-запроса для обновления токенов.
+        Обрабатываем refresh токен и генерируем новый access токен.
+        """
+        refresh_token = request.data.get('refresh')
+        if not refresh_token:
+            return Response({"detail": "Refresh token is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # Попробуем загрузить refresh токен
+            token = RefreshToken(refresh_token)
+            # Генерируем новый access токен
+            new_access_token = token.access_token
+
+            return Response({"access": str(new_access_token)}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+class CustomTokenRefreshView(TokenRefreshView):
+    permission_classes = [IsAuthenticated]  # Только аутентифицированные пользователи
+
+    @swagger_auto_schema(
+        operation_description="Обновление токенов с использованием refresh-токена.",
+        responses={
+            200: openapi.Response(
+                description="Успешное обновление токена",
+                examples={
+                    "application/json": {
+                        "access": "new-access-token"
+                    }
+                }
+            ),
+            400: openapi.Response(
+                description="Неверный или истекший refresh-токен"
+            ),
+        }
+    )
+    def post(self, request, *args, **kwargs):
+        """
+
+        """
+        refresh_token = request.data.get('refresh')
+        if not refresh_token:
+            return Response({"detail": "Refresh token is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # Попробуем загрузить refresh токен
+            token = RefreshToken(refresh_token)
+            # Генерируем новый access токен
+            new_access_token = token.access_token
+
+            return Response({"access": str(new_access_token)}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
