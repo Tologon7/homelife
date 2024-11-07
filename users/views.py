@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
-
+from rest_framework_simplejwt.tokens import AccessToken
 from users.models import *
 from rest_framework import generics, exceptions
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
@@ -15,7 +15,13 @@ from django.core.mail import send_mail
 from rest_framework import generics, status
 from config import settings
 from users.models import User, OTP
-
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework import status
+from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.exceptions import AuthenticationFailed, NotAcceptable
 from rest_framework.response import Response
@@ -324,48 +330,6 @@ class UserListView(generics.ListAPIView):
 
     def get_queryset(self):
         return User.objects.all().order_by('-id').filter(is_active=True)
-
-
-
-
-class CustomTokenRefreshView(TokenRefreshView):
-    permission_classes = [IsAuthenticated]  # Только аутентифицированные пользователи
-
-    @swagger_auto_schema(
-        operation_description="Обновление токенов с использованием refresh-токена.",
-        responses={
-            200: openapi.Response(
-                description="Успешное обновление токена",
-                examples={
-                    "application/json": {
-                        "access": "new-access-token"
-                    }
-                }
-            ),
-            400: openapi.Response(
-                description="Неверный или истекший refresh-токен"
-            ),
-        }
-    )
-    def post(self, request, *args, **kwargs):
-        """
-        Обработка POST-запроса для обновления токенов.
-        Обрабатываем refresh токен и генерируем новый access токен.
-        """
-        refresh_token = request.data.get('refresh')
-        if not refresh_token:
-            return Response({"detail": "Refresh token is required."}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            # Попробуем загрузить refresh токен
-            token = RefreshToken(refresh_token)
-            # Генерируем новый access токен
-            new_access_token = token.access_token
-
-            return Response({"access": str(new_access_token)}, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
 
 
 class CustomTokenRefreshView(TokenRefreshView):
