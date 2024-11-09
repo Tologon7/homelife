@@ -1,22 +1,43 @@
 from rest_framework import serializers
 from .models import Cart, CartItem, Order, PaymentMethod
 from product.serializers import ProductSerializer
-
-
+from .utils import remove_zero_quantity_items
 class CartSerializer(serializers.ModelSerializer):
+    total_price = serializers.SerializerMethodField()
+
     class Meta:
         model = Cart
         fields = '__all__'
 
+    def get_total_price(self, obj):
+        # Очистка товаров с нулевым количеством перед расчетом общей стоимости
+        remove_zero_quantity_items(obj)
 
+        total = 0
+        # Получаем все товары для данной корзины
+        cart_items = CartItem.objects.filter(cart=obj)
+
+        for item in cart_items:
+            # Если есть скидка, то учитываем ее
+            product_price = float(item.product.promotion) if item.product.promotion else float(item.product.price)
+            total += product_price * item.quantity  # Умножаем цену на количество
+
+        return total
 class CartItemsSerializer(serializers.ModelSerializer):
     cart_id = serializers.IntegerField(source='cart.id', read_only=True)
-    product_id = serializers.IntegerField(source='product.id', read_only=True)
     product = ProductSerializer(read_only=True)
+    total_price = serializers.SerializerMethodField()  # Добавим поле total_price
 
     class Meta:
         model = CartItem
-        fields = '__all__'
+        fields = ['cart_id', 'product', 'total_price', 'quantity', 'isOrder', 'user']  # Включаем total_price вместо price
+
+    def get_total_price(self, obj):
+        """
+        Рассчитываем итоговую стоимость для каждого элемента в корзине.
+        """
+        product_price = float(obj.product.promotion) if obj.product.promotion else float(obj.product.price)
+        return product_price * obj.quantity  # Возвращаем цену с учетом количества товара
 
     def create(self, validated_data):
         cart = validated_data.get('cart')
@@ -24,8 +45,8 @@ class CartItemsSerializer(serializers.ModelSerializer):
         quantity = validated_data.get('quantity')
         user = self.context['request'].user
 
-        if product.quantity < quantity:
-            raise serializers.ValidationError('Not enough stock available.')
+        # Проверка на наличие достаточного количества товара
+        self._check_stock_availability(product, quantity)
 
         # Устанавливаем цену с учетом промо-цены
         price = product.promotion if product.promotion is not None else product.price
@@ -38,24 +59,15 @@ class CartItemsSerializer(serializers.ModelSerializer):
         )
 
         if not created:
-            # Если элемент уже существует, увеличиваем количество и пересчитываем цену
-            if product.quantity < quantity:
-                raise serializers.ValidationError('Not enough stock available.')
-
-            # Обновляем количество и цену
-            product.quantity -= (quantity - cart_item.quantity)
-            cart_item.quantity = quantity
-            cart_item.price = price * quantity
-            product.save()
-            cart_item.save()
+            # Если элемент уже существует, обновляем количество и цену
+            self._update_existing_cart_item(cart_item, product, quantity, price)
         else:
-            # Если элемент создан, уменьшаем количество товара на складе
+            # Если элемент был создан, уменьшаем количество товара на складе
             product.quantity -= quantity
             product.save()
 
         # Пересчитываем общую стоимость корзины
-        cart.total_price = sum(item.price for item in CartItem.objects.filter(cart=cart))
-        cart.save()
+        self._update_cart_total_price(cart)
 
         return cart_item
 
@@ -64,8 +76,8 @@ class CartItemsSerializer(serializers.ModelSerializer):
         product = instance.product
 
         if new_quantity != instance.quantity:
-            if product.quantity + instance.quantity < new_quantity:
-                raise serializers.ValidationError('Not enough stock available.')
+            # Проверка на достаточное количество товара
+            self._check_stock_availability(product, new_quantity)
 
             # Обновляем количество товара на складе
             product.quantity += instance.quantity - new_quantity
@@ -79,9 +91,7 @@ class CartItemsSerializer(serializers.ModelSerializer):
             instance.save()
 
             # Пересчитываем общую стоимость корзины
-            cart = instance.cart
-            cart.total_price = sum(item.price for item in CartItem.objects.filter(cart=cart))
-            cart.save()
+            self._update_cart_total_price(instance.cart)
 
         return instance
 
@@ -98,3 +108,9 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = ['user', 'cart', 'total_price', 'address', 'payment_method']
+
+    def create(self, validated_data):
+        order = Order.objects.create(**validated_data)
+        order.clear_user_cart()  # Очистка корзины пользователя после создания заказа
+        order.send_order_email()  # Отправка уведомления на почту
+        return order

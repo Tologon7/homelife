@@ -7,53 +7,52 @@ from django.dispatch import receiver
 from django.core.mail import send_mail
 from django.utils import timezone
 import pytz
-
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
 class Cart(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     ordered = models.BooleanField(default=False)
-    total_price = models.FloatField(default=0)
 
     def __str__(self):
-        return str(self.user.first_name) + " " + str(self.total_price)
+        return f"Cart for {self.user}"
+
+
+    def update_total_price(self):
+        # Пересчитываем общую сумму товаров в корзине
+        self.total_price = sum(item.price for item in self.cartitem_set.all())
+        self.save()
 
 
 class CartItem(models.Model):
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    price = models.FloatField(default=0)  # Хранит актуальную цену (с учетом промо, если она есть)
+    price = models.FloatField(default=0)
     isOrder = models.BooleanField(default=False)
     quantity = models.IntegerField(default=1)
 
     def save(self, *args, **kwargs):
+        # Устанавливаем цену товара (с учетом возможной скидки)
         if self.product.promotion is not None:
             self.price = self.product.promotion * self.quantity
         else:
             self.price = self.product.price * self.quantity
         super(CartItem, self).save(*args, **kwargs)
+        # Обновляем общую сумму корзины
+        self.cart.update_total_price()
 
     def __str__(self):
         return f"{self.user.first_name} {self.product.title}"
 
 
+# Сигналы для автоматического пересчета общей суммы
 
-# @receiver(pre_save, sender=CartItem)
-# def correct_price(sender, instance, **kwargs):
-#     product = instance.product
-#     quantity = instance.quantity
-#     price_of_product = float(product.price)
-#
-#     if instance.promotion is not None and instance.promotion > 0:
-#         # Применяем скидку, если она существует и больше нуля
-#         discount_percentage = instance.promotion
-#         discounted_price = price_of_product * (1 - discount_percentage / 100)
-#         instance.price = quantity * discounted_price
-#     else:
-#         # Без промоакции
-#         instance.price = quantity * price_of_product
+@receiver(post_save, sender=CartItem)
+@receiver(post_delete, sender=CartItem)
+def update_cart_total(sender, instance, **kwargs):
+    instance.cart.update_total_price()
 
 
-#order
 
 class PaymentMethod(models.Model):
     name = models.CharField(max_length=50)  # Например: "Card", "Cash", "Bank Transfer"

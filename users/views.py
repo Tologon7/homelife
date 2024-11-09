@@ -344,7 +344,6 @@ class UserListView(generics.ListAPIView):
 
 class CustomTokenRefreshView(APIView):
     permission_classes = [IsAuthenticated]
-
     @swagger_auto_schema(
         operation_description="Обновление токенов с использованием access-токена.",
         request_body=openapi.Schema(
@@ -359,7 +358,7 @@ class CustomTokenRefreshView(APIView):
                 description="Успешное обновление токена",
                 examples={
                     "application/json": {
-                        "access": "new-access-token"  # Новый access токен
+                        "access": "new-access-token"
                     }
                 }
             ),
@@ -369,17 +368,17 @@ class CustomTokenRefreshView(APIView):
         }
     )
     def post(self, request, *args, **kwargs):
-        """Обработка запроса для обновления токенов с использованием access токена."""
+
         access_token = request.data.get('access')
 
         if not access_token:
             return Response({"detail": "Access token is required."}, status=status.HTTP_400_BAD_REQUEST)
-
         try:
-            # Проверка валидности access токена
+
             token = AccessToken(access_token)
             new_access_token = AccessToken.for_user(token.user)
-
             return Response({"access": str(new_access_token)}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
