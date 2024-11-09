@@ -85,47 +85,57 @@ class CartView(APIView):
         }
     )
     def post(self, request):
+        data = request.data
         user = request.user
-        product_id = request.data.get('product')
-        quantity = int(request.data.get('quantity', 1))
+        cart, _ = Cart.objects.get_or_create(user=user, ordered=False)
 
-        product = get_object_or_404(Product, id=product_id)
+        product = get_object_or_404(Product, id=data.get('product'))
+        quantity = int(data.get('quantity', 1))
 
         if quantity <= 0:
-            return Response({'error': 'Invalid quantity'}, status=400)
+            return Response({'error': 'Quantity must be greater than 0'}, status=400)
 
         if quantity > product.quantity:
-            return Response({'error': 'Not enough stock'}, status=400)
+            return Response({'error': 'Not enough stock available'}, status=400)
 
-        cart, _ = Cart.objects.get_or_create(user=user, ordered=False)
-        price = product.price * (1 - (product.promotion or 0) / 100)
+        # Calculate the price with promotion if applicable
+        price = product.price
+        promotion = product.promotion or 0
+        if promotion > 0:
+            price *= (1 - promotion / 100)
 
+        # Get or create the CartItem
         cart_item, created = CartItem.objects.get_or_create(
             cart=cart,
             product=product,
-            defaults={'price': price, 'quantity': quantity}
+            defaults={'price': price, 'quantity': quantity, 'user': user}
         )
 
         if not created:
+            # Update existing CartItem
             cart_item.quantity += quantity
             cart_item.price = price * cart_item.quantity
             cart_item.save()
-        product.quantity -= quantity
-        product.save()
+        else:
+            # Decrease product stock and save CartItem
+            product.quantity -= quantity
+            product.save()
 
-        cart.total_price = sum(item.price for item in cart.items.all())
+        # Update cart total price
+        cart.total_price = sum(item.price for item in CartItem.objects.filter(cart=cart))
         cart.save()
 
-        return Response({'success': 'Item added to cart'}, status=201)
+        return Response({'success': 'Item added to your cart'})
 
     @swagger_auto_schema(
         tags=['cart'],
-        operation_description="Обновить товар в корзине.",
+        operation_description="Изменить/обновить товар в корзине пользователя.",
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
-                'id': openapi.Schema(type=openapi.TYPE_INTEGER, description="ID товара в корзине"),
-                'quantity': openapi.Schema(type=openapi.TYPE_INTEGER, description="Новое количество товара"),
+                'id': openapi.Schema(type=openapi.TYPE_INTEGER, description="ID товара в корзине", required=['id']),
+                'quantity': openapi.Schema(type=openapi.TYPE_INTEGER, description="Новое количество товара",
+                                           required=['quantity']),
             },
             required=['id', 'quantity']
         )
