@@ -9,8 +9,6 @@ from django.utils import timezone
 import pytz
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
-
-
 class Cart(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     ordered = models.BooleanField(default=False)
@@ -25,7 +23,6 @@ class Cart(models.Model):
         self.subtotal = sum(item.subtotal() for item in self.items.all())  # Сумма без скидок
         self.total_price = sum(item.total_price() for item in self.items.all())  # Сумма с учетом скидок
         self.save()
-
 
 class CartItem(models.Model):
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items')
@@ -57,13 +54,6 @@ class CartItem(models.Model):
 
     def __str__(self):
         return f"{self.user.first_name} {self.product.title}"
-
-
-# Сигналы для автоматического пересчета общей суммы
-@receiver(post_save, sender=CartItem)
-@receiver(post_delete, sender=CartItem)
-def update_cart_total(sender, instance, **kwargs):
-    instance.cart.update_totals()
 
 
 class PaymentMethod(models.Model):

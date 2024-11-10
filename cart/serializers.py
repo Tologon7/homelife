@@ -4,145 +4,94 @@ from .models import Cart, CartItem, Order, PaymentMethod
 from product.serializers import ProductSerializer
 from .utils import remove_zero_quantity_items
 
+
+
 class CartSerializer(serializers.ModelSerializer):
     total_price = serializers.SerializerMethodField()
     total_quantity = serializers.SerializerMethodField()
     cart_items = serializers.SerializerMethodField()
+    subtotal = serializers.SerializerMethodField()
 
     class Meta:
         model = Cart
-        fields = ['id', 'total_price', 'total_quantity', 'cart_items']  # Поля корзины
+        fields = ['id', 'total_price', 'total_quantity', 'cart_items', 'subtotal']
 
     def get_total_price(self, obj):
-        # Очистка товаров с нулевым количеством перед расчетом общей стоимости
-        remove_zero_quantity_items(obj)
+        total_price = self.get_subtotal(obj)  # Возвращаем subtotal как общую цену
+        print(f"Total Price calculated: {total_price}")  # Логирование итоговой цены
+        return total_price
 
+    def get_subtotal(self, obj):
         total = 0
-        # Получаем все товары для данной корзины
-        cart_items = CartItem.objects.filter(cart=obj)
-
-        for item in cart_items:
-            # Если есть скидка, то учитываем ее
-            product_price = float(item.product.promotion) if item.product.promotion else float(item.product.price)
-            total += product_price * item.quantity  # Умножаем цену на количество
-
+        for item in obj.cartitem_set.all():
+            product_price = self.calculate_product_price(item.product)
+            print(f"Product Price for {item.product.title}: {product_price}")  # Логирование цены товара
+            if product_price < 0:
+                raise serializers.ValidationError(f"Цена товара '{item.product.title}' не может быть отрицательной")
+            total += product_price * item.quantity  # Суммируем стоимость каждого товара с учетом скидки
+        print(f"Calculated Subtotal: {total}")  # Логирование итоговой суммы
         return total
 
     def get_total_quantity(self, obj):
-        """Возвращаем общее количество товаров в корзине."""
-        return sum(item.quantity for item in obj.cartitem_set.all())
+        total_quantity = sum(item.quantity for item in obj.cartitem_set.all())  # Количество всех товаров
+        print(f"Total Quantity calculated: {total_quantity}")  # Логирование количества
+        return total_quantity
 
     def get_cart_items(self, obj):
-        """Возвращаем список товаров с изображениями в корзине."""
-        items = CartItem.objects.filter(cart=obj)
+        items = obj.cartitem_set.select_related('product').all()  # Получаем товары
         cart_items_data = []
         for item in items:
-            product_price = float(item.product.promotion) if item.product.promotion else float(item.product.price)
+            product_price = self.calculate_product_price(item.product)
             cart_items_data.append({
-                'productId': item.product.id,
+                'cart_id': item.cart.id,
+                'product_id': item.product.id,
                 'title': item.product.title,
-                'image': item.product.image.url if item.product.image else None,  # URL изображения товара
+                'image': item.product.image.url if item.product.image else None,
                 'quantity': item.quantity,
-                'price': product_price * item.quantity  # Общая стоимость для данного товара
+                'price': product_price * item.quantity  # Цена товара * количество с учетом скидки
             })
         return cart_items_data
+
+    def calculate_product_price(self, product):
+        """Метод для вычисления цены товара с учетом скидки"""
+        price = product.promotion if product.promotion else product.price
+        print(f"Price for {product.title}: {price}")  # Логирование цены товара
+        if price < 0:
+            raise serializers.ValidationError(f"Цена товара '{product.title}' не может быть отрицательной")
+        return price
 
 class CartItemsSerializer(serializers.ModelSerializer):
     cart_id = serializers.IntegerField(source='cart.id', read_only=True)
     product_id = serializers.IntegerField(source='product.id', read_only=True)
     title = serializers.CharField(source='product.title', read_only=True)
-    image = serializers.SerializerMethodField()  # Добавляем поле для изображения
+    image = serializers.SerializerMethodField()
     quantity = serializers.IntegerField()
     price = serializers.SerializerMethodField()
 
     class Meta:
         model = CartItem
-        fields = ['cart_id', 'product_id', 'title', 'image', 'quantity', 'price']  # Убираем ненужные поля
+        fields = ['cart_id', 'product_id', 'title', 'image', 'quantity', 'price']
 
     def get_image(self, obj):
-        """Возвращаем изображение товара."""
         return self.get_product_image(obj.product)
 
     def get_price(self, obj):
-        """
-        Рассчитываем итоговую стоимость для каждого элемента в корзине.
-        """
-        product_price = float(obj.product.promotion) if obj.product.promotion else float(obj.product.price)
+        product_price = self.calculate_product_price(obj.product)
         return product_price * obj.quantity
 
-    def create(self, validated_data):
-        cart = validated_data.get('cart')
-        product = validated_data.get('product')
-        quantity = validated_data.get('quantity')
-        user = self.context['request'].user
-
-        # Проверка на наличие достаточного количества товара
-        self._check_stock_availability(product, quantity)
-
-        # Устанавливаем цену с учетом промо-цены
-        price = product.promotion if product.promotion is not None else product.price
-        total_price = price * quantity
-
-        cart_item, created = CartItem.objects.get_or_create(
-            cart=cart,
-            product=product,
-            defaults={'quantity': quantity, 'price': total_price, 'user': user}
-        )
-
-        if not created:
-            # Если элемент уже существует, обновляем количество и цену
-            cart_item.quantity += quantity
-            cart_item.price = total_price
-            cart_item.save()
-
-        # Пересчитываем общую стоимость корзины
-        self._update_cart_total_price(cart)
-
-        return cart_item
-
-    def update(self, instance, validated_data):
-        new_quantity = validated_data.get('quantity', instance.quantity)
-        product = instance.product
-
-        if new_quantity != instance.quantity:
-            # Проверка на достаточное количество товара
-            self._check_stock_availability(product, new_quantity)
-
-            # Устанавливаем цену с учетом промо-цены
-            price = product.promotion if product.promotion is not None else product.price
-            instance.price = price * new_quantity
-
-            instance.quantity = new_quantity
-            instance.save()
-
-            # Пересчитываем общую стоимость корзины
-            self._update_cart_total_price(instance.cart)
-
-        return instance
-
-    def _check_stock_availability(self, product, quantity):
-        """Проверка на достаточное количество товара на складе."""
-        if product.quantity < quantity:
-            raise serializers.ValidationError(f"Недостаточно товара '{product.title}' на складе")
-
-    def _update_cart_total_price(self, cart):
-        """Обновляет общую стоимость корзины."""
-        total_price = sum(
-            (item.product.promotion or item.product.price) * item.quantity
-            for item in cart.cartitem_set.all()
-        )
-        cart.total_price = total_price
-        cart.save()
+    def calculate_product_price(self, product):
+        """Метод для вычисления цены товара с учетом скидки"""
+        return product.promotion if product.promotion else product.price
 
     def get_product_image(self, product):
-        """Метод для выбора изображения товара (image1, image2, image3)."""
+        """Проверяем изображения по порядку"""
         if product.image1:
             return product.image1.url
         elif product.image2:
             return product.image2.url
         elif product.image3:
             return product.image3.url
-        return None  # Если изображений нет
+        return None
 class PaymentMethodSerializer(serializers.ModelSerializer):
     class Meta:
         model = PaymentMethod
