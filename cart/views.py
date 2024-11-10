@@ -10,7 +10,6 @@ from .models import Cart, CartItem, Order, PaymentMethod
 from product.models import Product
 from .serializers import CartItemsSerializer, OrderSerializer
 
-
 class CartView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -28,8 +27,7 @@ class CartView(APIView):
                             'id': openapi.Schema(type=openapi.TYPE_INTEGER, description="ID товара"),
                             'name': openapi.Schema(type=openapi.TYPE_STRING, description="Название товара"),
                             'quantity': openapi.Schema(type=openapi.TYPE_INTEGER, description="Количество товара"),
-                            'price': openapi.Schema(type=openapi.TYPE_NUMBER, format=openapi.FORMAT_FLOAT,
-                                                    description="Цена товара"),
+                            'price': openapi.Schema(type=openapi.TYPE_NUMBER, format=openapi.FORMAT_FLOAT, description="Цена товара"),
                             'description': openapi.Schema(type=openapi.TYPE_STRING, description="Описание товара"),
                             'image_url': openapi.Schema(type=openapi.TYPE_STRING, description="URL изображения товара"),
                         },
@@ -54,7 +52,16 @@ class CartView(APIView):
 
         queryset = CartItem.objects.filter(cart=cart)
         serializer = CartItemsSerializer(queryset, many=True)
-        return Response(serializer.data)
+
+        # Расчет общей стоимости корзины
+        total_price = sum(item.price * item.quantity for item in queryset)
+
+        return Response({
+            'items': serializer.data,
+            'total_quantity': sum(item.quantity for item in queryset),
+            'subtotal': total_price,
+            'totalPrice': total_price,
+        })
 
     @swagger_auto_schema(
         tags=['cart'],
@@ -107,10 +114,7 @@ class CartView(APIView):
         if promotion > 0:
             price *= (1 - promotion / 100)
 
-        # Очистить старые товары из корзины, если они есть
-        cart.cartitem_set.all().delete()
-
-        # Добавляем новый товар в корзину
+        # Добавляем товар в корзину без уменьшения количества на складе
         cart_item, created = CartItem.objects.get_or_create(
             cart=cart,
             product=product,
@@ -122,16 +126,13 @@ class CartView(APIView):
             cart_item.quantity += quantity
             cart_item.price = price * cart_item.quantity
             cart_item.save()
-        else:
-            # Уменьшаем количество товара на складе и сохраняем CartItem
-            product.quantity -= quantity
-            product.save()
 
         # Обновляем общую стоимость корзины
-        cart.total_price = sum(item.price for item in CartItem.objects.filter(cart=cart))
+        cart.total_price = sum(item.price * item.quantity for item in CartItem.objects.filter(cart=cart))
         cart.save()
 
         return Response({'success': 'Item added to your cart'})
+
     def put(self, request):
         cart_item = get_object_or_404(CartItem, id=request.data.get('id'))
         new_quantity = int(request.data.get('quantity', 1))
@@ -151,7 +152,7 @@ class CartView(APIView):
         cart_item.save()
         product.save()
 
-        cart_item.cart.total_price = sum(item.price for item in cart_item.cart.items.all())
+        cart_item.cart.total_price = sum(item.price * item.quantity for item in cart_item.cart.items.all())
         cart_item.cart.save()
 
         return Response({'success': 'Product updated'})
@@ -170,16 +171,31 @@ class CartView(APIView):
         }
     )
     def delete(self, request):
-        cart_item = get_object_or_404(CartItem, id=request.data.get('id'))
-        cart_item.product.quantity += cart_item.quantity
-        cart_item.product.save()
+        # Получаем id продукта из запроса
+        product_id = request.data.get('id')
+        if not product_id:
+            return Response({'error': 'Product ID not provided'}, status=400)
 
-        cart = cart_item.cart
-        cart_item.delete()
-        cart.total_price = sum(item.price for item in cart.items.all())
-        cart.save()
+        # Получаем все CartItem для данного продукта и проверяем, что они принадлежат текущему пользователю
+        cart_items = CartItem.objects.filter(product__id=product_id, user=request.user)
 
-        return Response({'success': 'Item removed from cart'}, status=204)
+        if not cart_items.exists():
+            return Response({'error': 'No CartItem found for this product in your cart'}, status=404)
+
+        for cart_item in cart_items:
+            # Возвращаем количество товара обратно на склад
+            cart_item.product.quantity += cart_item.quantity
+            cart_item.product.save()
+
+            # Удаляем товар из корзины
+            cart = cart_item.cart
+            cart_item.delete()
+
+            # Обновляем общую цену корзины
+            cart.total_price = sum(item.price * item.quantity for item in cart.items.all())
+            cart.save()
+
+        return Response({'success': 'Items removed from cart'}, status=204)
 
 
 class CreateOrderView(APIView):
@@ -192,8 +208,7 @@ class CreateOrderView(APIView):
             type=openapi.TYPE_OBJECT,
             properties={
                 'address': openapi.Schema(type=openapi.TYPE_STRING, description="Адрес доставки"),
-                'payment_method': openapi.Schema(type=openapi.TYPE_INTEGER,
-                                                 description="Способ оплаты (1 - наличные, 2 - карта)")
+                'payment_method': openapi.Schema(type=openapi.TYPE_INTEGER, description="Способ оплаты (1 - наличные, 2 - карта)")
             },
             required=['address', 'payment_method']
         ),
@@ -209,16 +224,22 @@ class CreateOrderView(APIView):
         if not cart:
             return Response({'error': 'Cart not found'}, status=400)
 
-        serializer = OrderSerializer(data={
-            'user': user.id,
-            'cart': cart.id,
-            'total_price': cart.total_price,
-            'address': request.data.get('address'),
-            'payment_method': request.data.get('payment_method')
-        })
-        if serializer.is_valid():
-            order = serializer.save()
-            order.send_order_email()
-            order.clear_user_cart()
-            return Response({'success': 'Order created and email sent'}, status=201)
-        return Response(serializer.errors, status=400)
+        # Уменьшаем количество товара на складе при оформлении заказа
+        for cart_item in cart.cartitem_set.all():
+            product = cart_item.product
+            product.quantity -= cart_item.quantity
+            product.save()
+
+        # Создаем заказ
+        payment_method = get_object_or_404(PaymentMethod, id=request.data['payment_method'])
+        order = Order.objects.create(
+            user=user,
+            total_price=cart.total_price,
+            address=request.data['address'],
+            payment_method=payment_method
+        )
+
+        cart.ordered = True
+        cart.save()
+
+        return Response(OrderSerializer(order).data, status=201)
