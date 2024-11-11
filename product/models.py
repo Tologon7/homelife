@@ -58,7 +58,7 @@ class Product(models.Model):
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products', )
     color = models.ForeignKey(Color, on_delete=models.CASCADE, )
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    promotion = models.DecimalField(max_digits=10, decimal_places=2,)
+    promotion = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     brand = models.ForeignKey(Brand, on_delete=models.CASCADE, related_name='products', )
     quantity = models.IntegerField()
     description = models.TextField(max_length=2551)
