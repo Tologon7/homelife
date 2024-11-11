@@ -202,7 +202,8 @@ class CartView(APIView):
         }
     )
     def put(self, request):
-        product_id = request.data.get('product')  # Получаем ID продукта
+        # Получаем ID товара и новое количество из данных запроса
+        product_id = request.data.get('id')  # Получаем ID продукта
         new_quantity = int(request.data.get('quantity', 1))  # Получаем новое количество товара
 
         # Проверка на наличие данных
@@ -210,7 +211,10 @@ class CartView(APIView):
             return Response({'error': 'Invalid quantity'}, status=400)
 
         # Получаем товар в корзине
-        cart_item = get_object_or_404(CartItem, cart__user=request.user, product__id=product_id)
+        try:
+            cart_item = get_object_or_404(CartItem, cart__user=request.user, product__id=product_id)
+        except NotFound:
+            return Response({'error': 'Product not found in cart'}, status=404)
 
         # Проверка, есть ли достаточно товара на складе
         if new_quantity > cart_item.product.quantity:
@@ -235,7 +239,6 @@ class CartView(APIView):
             'totalPrice': cart_item.cart.total_price,
             'success': 'Product updated'
         })
-
     def delete(self, request):
         product_id = request.data.get('id')
         if not product_id:
