@@ -11,6 +11,7 @@ from product.models import Product
 from .serializers import CartItemsSerializer, OrderSerializer
 from django.db.models import Sum, F
 from .serializers import CartItemsSerializer, OrderSerializer
+from decimal import Decimal
 
 
 class CartView(APIView):
@@ -203,8 +204,8 @@ class CartView(APIView):
     )
     def put(self, request):
         # Получаем ID товара и новое количество из данных запроса
-        product_id = request.data.get('id')  # Получаем ID продукта
-        new_quantity = int(request.data.get('quantity', 1))  # Получаем новое количество товара
+        product_id = request.data.get('id')
+        new_quantity = int(request.data.get('quantity', 1))
 
         # Проверка на наличие данных
         if new_quantity <= 0:
@@ -222,15 +223,15 @@ class CartView(APIView):
 
         # Рассчитываем цену товара с учетом скидки
         product = cart_item.product
-        price = product.price * (1 - (product.promotion or 0) / 100)
+        price = product.price * (1 - (Decimal(product.promotion or 0) / Decimal(100)))
 
         # Обновляем количество товара и пересчитываем цену
         cart_item.quantity = new_quantity
-        cart_item.price = price * new_quantity  # Пересчитываем цену на основе нового количества
+        cart_item.price = price * Decimal(new_quantity)  # Пересчитываем цену на основе нового количества
         cart_item.save()
 
         # Пересчитываем общую стоимость корзины
-        self.update_cart_totals(cart_item.cart)
+        self.update_cart_totals(cart_item.cart)  # Убедитесь, что этот метод определен и обновляет корзину
 
         return Response({
             'items': CartItemsSerializer(cart_item.cart.items.all(), many=True).data,
@@ -239,7 +240,6 @@ class CartView(APIView):
             'totalPrice': cart_item.cart.total_price,
             'success': 'Product updated'
         })
-
     @swagger_auto_schema(
         tags=['cart'],
         operation_description="Удалить товар из корзины по ID товара.",
