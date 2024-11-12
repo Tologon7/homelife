@@ -64,28 +64,29 @@ class CartView(APIView):
 
         # Инициализация переменных для подсчета
         total_quantity = 0
-        subtotal = 0
-        total_price = 0
+        subtotal = Decimal(0)
+        total_price = Decimal(0)
 
-        # Перебираем товары в корзине для вычислений
+        # Перебираем товары в корзине для вычислений и обновления цены каждого товара
         for item in queryset:
-            # Получаем цену товара и скидку
-            product_price = item.product.price  # Обычная цена товара
-            product_promotion = item.product.promotion  # Скидка товара
+            product = item.product
+            product_price = product.price  # Обычная цена товара
+            product_promotion = product.promotion  # Скидка товара в процентах, если есть
 
-            # Если акция есть, то цена с учетом акции равна цене по акции
+            # Рассчитываем цену с учетом акции, если она есть
             if product_promotion:
-                price_per_item = product_promotion  # Цена по акции
+                discounted_price = product_price * (1 - Decimal(product_promotion) / Decimal(100))
             else:
-                price_per_item = product_price  # Если акции нет, то обычная цена
+                discounted_price = product_price
 
-            # Рассчитываем стоимость товара с учетом акции
-            item_total = price_per_item * item.quantity
+            # Обновляем цену товара в корзине с учетом скидки
+            item.price = discounted_price * item.quantity
+            item.save()
 
             # Добавляем данные в итоговые суммы
             total_quantity += item.quantity
             subtotal += product_price * item.quantity  # Сумма без скидки
-            total_price += item_total  # Итоговая сумма с учетом акции
+            total_price += discounted_price * item.quantity  # Итоговая сумма с учетом акции
 
         # Обновляем поля корзины с правильными итоговыми значениями
         cart.total_quantity = total_quantity
