@@ -239,6 +239,67 @@ class CartView(APIView):
             'totalPrice': cart_item.cart.total_price,
             'success': 'Product updated'
         })
+
+    @swagger_auto_schema(
+        tags=['cart'],
+        operation_description="Удалить товар из корзины по ID товара.",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'id': openapi.Schema(type=openapi.TYPE_INTEGER, description="ID товара для удаления из корзины"),
+            },
+            required=['id']
+        ),
+        responses={
+            204: openapi.Response(
+                description="Товар успешно удален из корзины",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'items': openapi.Schema(
+                            type=openapi.TYPE_ARRAY,
+                            items=openapi.Schema(
+                                type=openapi.TYPE_OBJECT,
+                                properties={
+                                    'cart_id': openapi.Schema(type=openapi.TYPE_INTEGER, description="ID корзины"),
+                                    'product_id': openapi.Schema(type=openapi.TYPE_INTEGER, description="ID товара"),
+                                    'title': openapi.Schema(type=openapi.TYPE_STRING, description="Название товара"),
+                                    'image': openapi.Schema(type=openapi.TYPE_STRING,
+                                                            description="URL изображения товара"),
+                                    'quantity': openapi.Schema(type=openapi.TYPE_INTEGER,
+                                                               description="Количество товара"),
+                                    'price': openapi.Schema(type=openapi.TYPE_NUMBER, format=openapi.FORMAT_FLOAT,
+                                                            description="Цена товара"),
+                                },
+                            )
+                        ),
+                        'total_quantity': openapi.Schema(type=openapi.TYPE_INTEGER,
+                                                         description="Общее количество товаров в корзине"),
+                        'subtotal': openapi.Schema(type=openapi.TYPE_NUMBER, format=openapi.FORMAT_FLOAT,
+                                                   description="Сумма без учета скидки"),
+                        'totalPrice': openapi.Schema(type=openapi.TYPE_NUMBER, format=openapi.FORMAT_FLOAT,
+                                                     description="Итоговая стоимость товаров с учетом скидки"),
+                        'success': openapi.Schema(type=openapi.TYPE_STRING,
+                                                  description="Сообщение об успешном удалении товара"),
+                    }
+                )
+            ),
+            400: openapi.Response(
+                description="Не указан ID товара или некорректный запрос",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={'error': openapi.Schema(type=openapi.TYPE_STRING, description="Ошибка")}
+                )
+            ),
+            404: openapi.Response(
+                description="Товар не найден в корзине",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={'error': openapi.Schema(type=openapi.TYPE_STRING, description="Ошибка")}
+                )
+            ),
+        }
+    )
     def delete(self, request):
         product_id = request.data.get('id')
         if not product_id:
