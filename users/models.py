@@ -28,11 +28,10 @@ class CustomUserManager(BaseUserManager):
 
 
 class Gender(models.Model):
-    title = models.CharField(max_length=20)
+    name = models.CharField(max_length=10)
 
     def __str__(self):
-        return self.title
-
+        return self.name
 class User(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(max_length=255)
     gender = models.ForeignKey(Gender, on_delete=models.CASCADE, blank=True, null=True)
