@@ -104,7 +104,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 
 DATABASES = {
-    'default': dj_database_url.parse("postgresql://homelifedb_g0l5_user:iBCHEShlUcVLtCGDWby4uEHXHjB2GZFY@dpg-cs5rvntumphs73b1oc00-a.oregon-postgres.render.com/homelifedb_g0l5")
+    'default': dj_database_url.parse("postgresql://data_homelife_user:1OfRzDig5aian3Oo6Gb5KwkEqYO3upDl@dpg-cspmaulumphs73d500kg-a.oregon-postgres.render.com/data_homelife")
 }
 
 
@@ -256,4 +256,3 @@ CORS_ALLOW_ALL_ORIGINS = True
 # }
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
