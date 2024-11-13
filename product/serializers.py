@@ -420,7 +420,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         return obj.product.title if obj.product else 'unknown'
 
     def get_user_name(self, obj):
-        return obj.user.first_name if obj.user else 'unknown'
+        return obj.user.username if obj.user else 'unknown'
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)

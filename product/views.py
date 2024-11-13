@@ -32,14 +32,14 @@ class HomepageView(APIView):
     def get(self, request, *args, **kwargs):
         banner = Banner.objects.filter(id=1).first()
         product_of_the_day = Product.objects.filter(is_product_of_the_day=True, is_active=True).first()
-        new_products = Product.objects.filter(is_active=True).order_by('-id')[:4]
-        promotion_products = Product.objects.filter(promotion__isnull=False, is_active=True)[:4]
+        new_products = Product.objects.filter(is_active=True).order_by('-id')[:5]
+        promotion_products = Product.objects.filter(promotion__isnull=False, is_active=True)[:5]
         popular_products = Product.objects.filter(is_active=True).annotate(
             review_count=Count('reviews'),
             avg_rating=Avg('reviews__rating')
         ).filter(
             review_count__gt=0
-        ).order_by('-avg_rating')[:8]
+        ).order_by('-avg_rating')[:10]
 
         response_data = {
             "homepage": {
