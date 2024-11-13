@@ -3,9 +3,6 @@ from rest_framework import serializers
 from .models import Cart, CartItem, Order, PaymentMethod
 from product.serializers import ProductSerializer
 from .utils import remove_zero_quantity_items
-
-
-
 class CartSerializer(serializers.ModelSerializer):
     total_price = serializers.SerializerMethodField()
     total_quantity = serializers.SerializerMethodField()
@@ -17,28 +14,27 @@ class CartSerializer(serializers.ModelSerializer):
         fields = ['id', 'total_price', 'total_quantity', 'cart_items', 'subtotal']
 
     def get_total_price(self, obj):
-        total_price = self.get_subtotal(obj)  # Возвращаем subtotal как общую цену
-        print(f"Total Price calculated: {total_price}")  # Логирование итоговой цены
+        # Рассчитываем общую цену всех товаров в корзине, с учетом их количества
+        total_price = sum(
+            self.calculate_product_price(item.product) * item.quantity for item in obj.cartitem_set.all()
+        )
+        print(f"Total Price (общая цена всех товаров): {total_price}")  # Логирование общей цены
         return total_price
 
     def get_subtotal(self, obj):
-        total = 0
-        for item in obj.cartitem_set.all():
-            product_price = self.calculate_product_price(item.product)
-            print(f"Product Price for {item.product.title}: {product_price}")  # Логирование цены товара
-            if product_price < 0:
-                raise serializers.ValidationError(f"Цена товара '{item.product.title}' не может быть отрицательной")
-            total += product_price * item.quantity  # Суммируем стоимость каждого товара с учетом скидки
-        print(f"Calculated Subtotal: {total}")  # Логирование итоговой суммы
-        return total
+        subtotal = sum(
+            self.calculate_product_price(item.product) * item.quantity for item in obj.cartitem_set.all()
+        )
+        print(f"Calculated Subtotal: {subtotal}")  # Логирование итоговой суммы
+        return subtotal
 
     def get_total_quantity(self, obj):
-        total_quantity = sum(item.quantity for item in obj.cartitem_set.all())  # Количество всех товаров
+        total_quantity = sum(item.quantity for item in obj.cartitem_set.all())
         print(f"Total Quantity calculated: {total_quantity}")  # Логирование количества
         return total_quantity
 
     def get_cart_items(self, obj):
-        items = obj.cartitem_set.select_related('product').all()  # Получаем товары
+        items = obj.cartitem_set.select_related('product').all()
         cart_items_data = []
         for item in items:
             product_price = self.calculate_product_price(item.product)
@@ -48,7 +44,7 @@ class CartSerializer(serializers.ModelSerializer):
                 'title': item.product.title,
                 'image': item.product.image.url if item.product.image else None,
                 'quantity': item.quantity,
-                'price': product_price * item.quantity  # Цена товара * количество с учетом скидки
+                'price': product_price * item.quantity  # Цена товара * количество
             })
         return cart_items_data
 
@@ -59,6 +55,7 @@ class CartSerializer(serializers.ModelSerializer):
         if price < 0:
             raise serializers.ValidationError(f"Цена товара '{product.title}' не может быть отрицательной")
         return price
+
 
 class CartItemsSerializer(serializers.ModelSerializer):
     cart_id = serializers.IntegerField(source='cart.id', read_only=True)

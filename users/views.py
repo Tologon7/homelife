@@ -44,8 +44,6 @@ from rest_framework import status
 from rest_framework_simplejwt.tokens import AccessToken
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-
-
 class UserMeView(generics.RetrieveAPIView):
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
@@ -55,13 +53,11 @@ class UserMeView(generics.RetrieveAPIView):
 
     @swagger_auto_schema(
         tags=['Authentication'],
-        operation_description="Этот ендпоинт предоставляет "
-                              "возможность получить информацию "
-                              "о текущем аутентифицированном пользователе. ",
+        operation_description="Этот ендпоинт предоставляет возможность получить информацию "
+                              "о текущем аутентифицированном пользователе.",
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
-
 
 class UserProfileUpdateView(generics.GenericAPIView):
     serializer_class = UserProfileSerializer

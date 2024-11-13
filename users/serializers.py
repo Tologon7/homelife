@@ -22,7 +22,7 @@ class PasswordMixinRegister(serializers.Serializer):
             raise serializers.ValidationError(
                 {'password': "Password must contain at least one special character (!@#$%^&*)."})
         if len(password) < 8:
-            raise serializers.ValidationError({'password': "Password must be at least 8 characters long."})
+            raise serialize0rs.ValidationError({'password': "Password must be at least 8 characters long."})
         return attrs
 
 
@@ -45,7 +45,6 @@ class PasswordMixin(serializers.Serializer):
         return attrs
 
 
-# Profile
 class UserSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
         validators=[RegexValidator(
@@ -59,10 +58,21 @@ class UserSerializer(serializers.ModelSerializer):
     number = serializers.IntegerField()
     wholesaler = serializers.BooleanField()
 
+    # Добавляем поле role в сериализатор
+    role = serializers.SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ['id', 'username', 'gender', 'age', 'email', 'number', 'wholesaler']
+        fields = ['id', 'username', 'gender', 'age', 'email', 'number', 'wholesaler', 'role']
 
+    def get_role(self, obj):
+        # Логика для получения роли пользователя
+        if obj.is_superuser:
+            return 'admin'
+        elif obj.wholesaler:
+            return 'wholesaler'
+        else:
+            return 'client'
 
 class UserProfileSerializer(serializers.ModelSerializer):
     username = serializers.CharField(

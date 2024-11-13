@@ -54,7 +54,7 @@ class CartView(APIView):
     )
     def get(self, request):
         user = request.user
-        cart = Cart.objects.filter(user=user, ordered=False).first()  # Получаем корзину пользователя
+        cart = Cart.objects.filter(user=user, ordered=False).first()
 
         if not cart:
             return Response({'error': 'Cart not found'}, status=404)
@@ -62,33 +62,33 @@ class CartView(APIView):
         # Получаем товары в корзине
         queryset = CartItem.objects.filter(cart=cart)
 
-        # Инициализация переменных для подсчета
+        # Переменные для подсчета
         total_quantity = 0
         subtotal = Decimal(0)
         total_price = Decimal(0)
 
-        # Перебираем товары в корзине для вычислений и обновления цены каждого товара
+        # Обрабатываем каждый элемент корзины
         for item in queryset:
             product = item.product
-            product_price = product.price  # Обычная цена товара
-            product_promotion = product.promotion  # Скидка товара в процентах, если есть
+            product_price = Decimal(product.price)  # Обычная цена товара
+            product_promotion = product.promotion  # Скидка товара, если есть
 
-            # Рассчитываем цену с учетом акции, если она есть
+            # Рассчитываем цену с учетом скидки
             if product_promotion:
                 discounted_price = product_price * (1 - Decimal(product_promotion) / Decimal(100))
             else:
                 discounted_price = product_price
 
-            # Обновляем цену товара в корзине с учетом скидки
+            # Обновляем цену элемента корзины с учетом скидки
             item.price = discounted_price * item.quantity
             item.save()
 
-            # Добавляем данные в итоговые суммы
+            # Обновляем итоговые значения
             total_quantity += item.quantity
             subtotal += product_price * item.quantity  # Сумма без скидки
-            total_price += discounted_price * item.quantity  # Итоговая сумма с учетом акции
+            total_price += discounted_price * item.quantity  # Итоговая сумма с учетом скидки
 
-        # Обновляем поля корзины с правильными итоговыми значениями
+        # Сохраняем обновленные значения корзины
         cart.total_quantity = total_quantity
         cart.subtotal = subtotal
         cart.total_price = total_price
@@ -97,12 +97,12 @@ class CartView(APIView):
         # Сериализуем товары для ответа
         serializer = CartItemsSerializer(queryset, many=True)
 
-        # Возвращаем актуальные данные с корзины
+        # Формируем ответ
         return Response({
-            'items': serializer.data,  # Товары в корзине
-            'total_quantity': total_quantity,  # Общее количество товаров
-            'subtotal': subtotal,  # Сумма без учета скидки
-            'totalPrice': total_price,  # Итоговая стоимость с учетом акции
+            'items': serializer.data,
+            'total_quantity': total_quantity,
+            'subtotal': float(subtotal),  # Преобразуем Decimal в float для JSON ответа
+            'totalPrice': float(total_price),
         })
 
     def post(self, request):

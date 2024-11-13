@@ -33,6 +33,11 @@ class Gender(models.Model):
     def __str__(self):
         return self.name
 class User(AbstractBaseUser, PermissionsMixin):
+    USER_ROLE_CHOICES = [
+        ('admin', 'Admin'),
+        ('wholesaler', 'Wholesaler'),
+        ('customer', 'Customer'),
+    ]
     username = models.CharField(max_length=255)
     gender = models.ForeignKey(Gender, on_delete=models.CASCADE, blank=True, null=True)
     age = models.IntegerField(blank=True, null=True)
@@ -41,6 +46,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     wholesaler = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
+    role = models.CharField(max_length=20, choices=USER_ROLE_CHOICES, default='customer')
 
     # for wholesaler
     otp_code = models.CharField(max_length=6, null=True, blank=True)
