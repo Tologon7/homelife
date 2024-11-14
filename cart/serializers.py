@@ -4,34 +4,33 @@ from .models import Cart, CartItem, Order, PaymentMethod
 from product.serializers import ProductSerializer
 from .utils import remove_zero_quantity_items
 class CartSerializer(serializers.ModelSerializer):
-    total_price = serializers.SerializerMethodField()
+    total_price = serializers.SerializerMethodField()  # Итоговая цена корзины с учетом одной скидки
     total_quantity = serializers.SerializerMethodField()
     cart_items = serializers.SerializerMethodField()
-    subtotal = serializers.SerializerMethodField()
+    subtotal = serializers.SerializerMethodField()  # Полная стоимость без учета скидки
 
     class Meta:
         model = Cart
         fields = ['id', 'total_price', 'total_quantity', 'cart_items', 'subtotal']
 
     def get_total_price(self, obj):
-        # Рассчитываем общую цену всех товаров в корзине, с учетом их количества
-        total_price = sum(
-            self.calculate_product_price(item.product) * item.quantity for item in obj.cartitem_set.all()
-        )
-        print(f"Total Price (общая цена всех товаров): {total_price}")  # Логирование общей цены
+        # Начальная сумма для всех товаров в корзине
+        total_price = 0
+        for item in obj.cartitem_set.all():
+            # Учитываем скидку, если она есть; если нет, используем стандартную цену
+            product_price = float(item.product.promotion) if item.product.promotion else float(item.product.price)
+            # Умножаем цену на количество и добавляем к общей сумме
+            total_price += product_price * item.quantity
+        print(f"Calculated Total Price with discounts: {total_price}")  # Логирование итоговой цены
         return total_price
 
     def get_subtotal(self, obj):
-        subtotal = sum(
-            self.calculate_product_price(item.product) * item.quantity for item in obj.cartitem_set.all()
-        )
-        print(f"Calculated Subtotal: {subtotal}")  # Логирование итоговой суммы
+        # Общая стоимость всех товаров без учета скидок
+        subtotal = sum(item.product.price * item.quantity for item in obj.cartitem_set.all())
         return subtotal
 
     def get_total_quantity(self, obj):
-        total_quantity = sum(item.quantity for item in obj.cartitem_set.all())
-        print(f"Total Quantity calculated: {total_quantity}")  # Логирование количества
-        return total_quantity
+        return sum(item.quantity for item in obj.cartitem_set.all())
 
     def get_cart_items(self, obj):
         items = obj.cartitem_set.select_related('product').all()
@@ -44,17 +43,13 @@ class CartSerializer(serializers.ModelSerializer):
                 'title': item.product.title,
                 'image': item.product.image.url if item.product.image else None,
                 'quantity': item.quantity,
-                'price': product_price * item.quantity  # Цена товара * количество
+                'price': product_price  # Цена одного товара с учетом скидки, если она есть
             })
         return cart_items_data
 
     def calculate_product_price(self, product):
-        """Метод для вычисления цены товара с учетом скидки"""
-        price = product.promotion if product.promotion else product.price
-        print(f"Price for {product.title}: {price}")  # Логирование цены товара
-        if price < 0:
-            raise serializers.ValidationError(f"Цена товара '{product.title}' не может быть отрицательной")
-        return price
+        """Вычисляет цену товара с учетом скидки"""
+        return product.promotion if product.promotion else product.price
 
 
 class CartItemsSerializer(serializers.ModelSerializer):
