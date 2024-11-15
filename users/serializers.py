@@ -266,3 +266,7 @@ class UserListSerializer(serializers.ModelSerializer):
             "is_staff",
             "gender",
         ]
+
+
+class TokenRefreshSerializer(serializers.Serializer):
+    access = serializers.CharField(min_length=1)

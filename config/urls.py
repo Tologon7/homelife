@@ -5,7 +5,8 @@ from django.conf.urls.static import static
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
-from users.views import CustomTokenRefreshView
+from users.views import TokenRefreshView  # Используем кастомный TokenRefreshView
+from rest_framework_simplejwt.views import TokenRefreshView as SimpleJWTTokenRefreshView  # Для использования стандартного токена, если нужно
 
 # Настройка для генерации схемы документации API
 schema_view = get_schema_view(
@@ -29,8 +30,10 @@ urlpatterns = [
     path('users/', include('users.urls')),
     path('cart/', include('cart.urls')),
 
-    # Эндпоинт для обновления токенов (заменили стандартный на кастомный)
-    path('api/token/refresh/', CustomTokenRefreshView.as_view(), name='custom_token_refresh'),
+    # Эндпоинт для обновления токенов (используем кастомный или стандартный по вашему выбору)
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+
+    # path('api/token/refresh/', SimpleJWTTokenRefreshView.as_view(), name='token_refresh'),  # Если используете стандартный
 
     # Документация API (Swagger UI, JSON и ReDoc)
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),

@@ -12,6 +12,10 @@ import dj_database_url
 import cloudinary
 from decouple import config
 # import cloudinary.uploader
+
+from datetime import timedelta
+from drf_yasg import openapi
+from drf_yasg.views import get_schema_view
 #import cloudinary.api
 
 os.environ['SSL_CERT_FILE'] = certifi.where()
@@ -227,6 +231,19 @@ CORS_ALLOWED_ORIGINS = [
     'https://homelifee.onrender.com',
     'http://127.0.0.1:8000',
 ]
+
+
+schema_view = get_schema_view(
+   openapi.Info(
+      title="API for Token Refresh",
+      default_version='v1',
+      description="API для обновления токенов",
+      contact=openapi.Contact(email="contact@yourdomain.local"),
+   ),
+   public=True,
+)
+
+
 
 CSRF_TRUSTED_ORIGINS = ['https://homelifee.onrender.com']
 

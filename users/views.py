@@ -35,6 +35,7 @@ from decouple import config
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import status
 from rest_framework.response import Response
+from rest_framework_simplejwt.exceptions import InvalidToken
 
 
 from rest_framework.response import Response
@@ -336,45 +337,30 @@ class UserListView(generics.ListAPIView):
     def get_queryset(self):
         return User.objects.all().order_by('-id').filter(is_active=True)
 
-
-
-class CustomTokenRefreshView(APIView):
-    permission_classes = [IsAuthenticated]
+class CustomTokenRefreshView(TokenRefreshView):
     @swagger_auto_schema(
-        operation_description="Обновление токенов с использованием access-токена.",
+        operation_summary="Обновить access токен",
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
-                'access': openapi.Schema(type=openapi.TYPE_STRING, description='Access token', minLength=1),
+                'refresh': openapi.Schema(type=openapi.TYPE_STRING, description='Текущий refresh токен'),
             },
-            required=['access'],
+            required=['refresh']
         ),
         responses={
-            200: openapi.Response(
-                description="Успешное обновление токена",
-                examples={
-                    "application/json": {
-                        "access": "new-access-token"
-                    }
+            200: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'access': openapi.Schema(type=openapi.TYPE_STRING, description='Новый access токен'),
                 }
             ),
-            400: openapi.Response(
-                description="Неверный или истекший токен"
-            ),
+            400: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'detail': openapi.Schema(type=openapi.TYPE_STRING, description='Ошибка запроса'),
+                }
+            )
         }
     )
     def post(self, request, *args, **kwargs):
-
-        access_token = request.data.get('access')
-
-        if not access_token:
-            return Response({"detail": "Access token is required."}, status=status.HTTP_400_BAD_REQUEST)
-        try:
-
-            token = AccessToken(access_token)
-            new_access_token = AccessToken.for_user(token.user)
-            return Response({"access": str(new_access_token)}, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-
+        return super().post(request, *args, **kwargs)
