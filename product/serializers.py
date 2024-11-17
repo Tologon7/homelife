@@ -352,8 +352,14 @@ class ProductShortSerializer(serializers.ModelSerializer):
             return [request.build_absolute_uri(image) for image in images if image]
         return [image for image in images if image]
 
+# class ProductCharacteristicSerializer(serializers.ModelSerializer):
+#      class Meta:
+#             model = ProductCharacteristic
+#             fields = ['key', 'value']
+#
 
 class ProductCreateSerializer(serializers.ModelSerializer):
+    # characteristics = ProductCharacteristicSerializer(many=True, required=False)
 
     class Meta:
         model = Product
@@ -371,10 +377,12 @@ class ProductCreateSerializer(serializers.ModelSerializer):
             'quantity',
             'description',
             'is_product_of_the_day',
+            # 'characteristics',
 
         ]
 
     def to_representation(self, instance):
+        """Переопределение вывода данных."""
         representation = super().to_representation(instance)
         request = self.context.get('request')
         if request:
@@ -384,21 +392,36 @@ class ProductCreateSerializer(serializers.ModelSerializer):
                 request.build_absolute_uri(instance.image3.url) if instance.image3 else None,
             ]
             representation['images'] = [image for image in images if image]
-        if not instance.reviews.exists():
-            representation.pop('reviews', None)
+            # Удаляем поля image1, image2, image3 из вывода
+            representation.pop('image1', None)
+            representation.pop('image2', None)
+            representation.pop('image3', None)
         return representation
 
-
-
     def create(self, validated_data):
+        """Создание продукта с характеристиками."""
         characteristics_data = validated_data.pop('characteristics', [])
         product = Product.objects.create(**validated_data)
-        for characteristic_data in characteristics_data:
-            characteristic, created = Characteristic.objects.get_or_create(**characteristic_data)
-            product.characteristics.add(characteristic)
+        for char_data in characteristics_data:
+            ProductCharacteristic.objects.create(product=product, **char_data)
         return product
-class ReviewSerializer(serializers.ModelSerializer):
 
+    def update(self, instance, validated_data):
+        """Обновление продукта и его характеристик."""
+        characteristics_data = validated_data.pop('characteristics', [])
+        instance = super().update(instance, validated_data)
+
+        # Удаляем старые характеристики
+        instance.characteristics.all().delete()
+
+        # Создаём новые характеристики
+        for char_data in characteristics_data:
+            ProductCharacteristic.objects.create(product=instance, **char_data)
+
+        return instance
+
+
+class ReviewSerializer(serializers.ModelSerializer):
     product_title = serializers.SerializerMethodField()
     user_name = serializers.SerializerMethodField()
 

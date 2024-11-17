@@ -45,6 +45,8 @@ from rest_framework import status
 from rest_framework_simplejwt.tokens import AccessToken
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
+
+
 class UserMeView(generics.RetrieveAPIView):
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
