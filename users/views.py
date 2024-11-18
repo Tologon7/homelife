@@ -27,6 +27,7 @@ from rest_framework.exceptions import AuthenticationFailed, NotAcceptable
 from rest_framework.response import Response
 from rest_framework import generics, exceptions
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
@@ -50,6 +51,7 @@ from drf_yasg.utils import swagger_auto_schema
 class UserMeView(generics.RetrieveAPIView):
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
 
     def get_object(self):
         return self.request.user
