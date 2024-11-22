@@ -225,6 +225,7 @@ schema_view = get_schema_view(
       contact=openapi.Contact(email="contact@yourdomain.local"),
    ),
    public=True,
+
 )
 
 
