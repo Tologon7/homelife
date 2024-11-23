@@ -17,7 +17,13 @@ from .filters import ProductFilter
 from drf_yasg import openapi
 from django.db.models import Q
 from decimal import Decimal
-
+import logging
+from rest_framework.response import Response
+from rest_framework import generics
+from .models import Review
+from .serializers import ReviewSerializer
+from rest_framework.permissions import IsAuthenticated
+logger = logging.getLogger(__name__)
 class HomepageView(APIView):
     @swagger_auto_schema(
         tags=['product'],
@@ -400,23 +406,21 @@ class ProductCreateView(generics.CreateAPIView):
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
 
-
 class ReviewCreateView(generics.CreateAPIView):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
+    permission_classes = [IsAuthenticated]
 
-    @swagger_auto_schema(
-        tags=['review'],
-        operation_description="Этот эндпоинт позволяет создать комментарий и оставить рейтинг."
-    )
     def post(self, request, *args, **kwargs):
-        return super().post(request, *args, **kwargs)
 
+        if not request.user.is_authenticated:
+            return Response({"detail": "Authentication credentials were not provided."}, status=status.HTTP_401_UNAUTHORIZED)
+        return super().post(request, *args, **kwargs)
 
 class ReviewDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
-
+    permission_classes = [IsAuthenticated]
     @swagger_auto_schema(
         tags=['review'],
         operation_description="Этот эндпоинт позволяет получить определенный комменарий по id."

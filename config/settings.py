@@ -16,6 +16,8 @@ from decouple import config
 from datetime import timedelta
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
+from decouple import config
+
 #import cloudinary.api
 
 os.environ['SSL_CERT_FILE'] = certifi.where()
@@ -170,13 +172,12 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',  # Обратите внимание, что это TokenAuthentication
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',  # Защищает эндпоинты
+        'rest_framework.permissions.IsAuthenticated',
     ],
 }
 
@@ -214,6 +215,7 @@ SIMPLE_JWT = {
 CORS_ALLOWED_ORIGINS = [
     'https://homelifee.onrender.com',
     'http://127.0.0.1:8000',
+    "http://localhost:3000",
 ]
 
 
