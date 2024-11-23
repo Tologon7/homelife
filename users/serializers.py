@@ -279,19 +279,26 @@ class TokenRefreshSerializer(serializers.Serializer):
 
 class GenderSerializer(serializers.ModelSerializer):
     label = serializers.SerializerMethodField()  # Отображение метки на русском
-    value = serializers.SerializerMethodField()  # Отображение значения для использования
+    value = serializers.CharField()  # Значение, которое отправляется в запросах
 
     class Meta:
         model = Gender
         fields = ['label', 'value']
 
     def get_label(self, obj):
-        return obj.label  # Теперь это поле 'label', а не 'name'
+        # Возвращаем label, соответствующий значению value
+        return obj.label  # Поле label будет показывать текст на русском (например, "Мужчина")
 
-    def get_value(self, obj):
-        # Учитываем значение из поля 'label'
-        if obj.label.lower() == 'мужчина':
-            return 'man'
-        elif obj.label.lower() == 'женщина':
-            return 'woman'
-        return ''
+    def create(self, validated_data):
+        # Логика для создания объекта, в котором value передается фронтом
+        value = validated_data.get('value')
+        label = ''
+
+        if value == 'man':
+            label = 'Мужчина'
+        elif value == 'woman':
+            label = 'Женщина'
+
+        # Создаем запись с полученными данными
+        gender = Gender.objects.create(label=label, value=value)
+        return gender

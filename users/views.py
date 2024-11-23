@@ -375,4 +375,4 @@ class GenderListView(APIView):
     def get(self, request):
         genders = Gender.objects.all()
         serializer = GenderSerializer(genders, many=True)
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
