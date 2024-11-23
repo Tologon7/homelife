@@ -368,3 +368,11 @@ class CustomTokenRefreshView(TokenRefreshView):
     )
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
+
+
+
+class GenderListView(APIView):
+    def get(self, request):
+        genders = Gender.objects.all()
+        serializer = GenderSerializer(genders, many=True)
+        return Response(serializer.data)

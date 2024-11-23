@@ -10,7 +10,8 @@ from .views import (
     ConfirmCodeView,
     ChangeForgotPasswordView,
     ChangePasswordView,
-    UserListView
+    UserListView,
+    GenderListView
 )
 
 from users.models import User
@@ -28,4 +29,5 @@ urlpatterns = [
     path('change-forgot-password/', ChangeForgotPasswordView.as_view(), name='change-forgot-password'),
     path('change-password/', ChangePasswordView.as_view(), name='change-password'),
     path('user-list/', UserListView.as_view(), name='user-list'),
+    path('genders/', GenderListView.as_view(), name='gender-list'),
 ]

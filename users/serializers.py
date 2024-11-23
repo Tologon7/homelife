@@ -10,6 +10,9 @@ import random
 from datetime import timedelta
 from django.utils import timezone
 import re
+from rest_framework import serializers
+from .models import Gender
+
 
 class PasswordMixinRegister(serializers.Serializer):
     password = serializers.CharField(write_only=True, required=True)
@@ -270,3 +273,25 @@ class UserListSerializer(serializers.ModelSerializer):
 
 class TokenRefreshSerializer(serializers.Serializer):
     access = serializers.CharField(min_length=1)
+
+# serializers.py
+
+
+class GenderSerializer(serializers.ModelSerializer):
+    label = serializers.SerializerMethodField()  # Отображение метки на русском
+    value = serializers.SerializerMethodField()  # Отображение значения для использования
+
+    class Meta:
+        model = Gender
+        fields = ['label', 'value']
+
+    def get_label(self, obj):
+        return obj.label  # Теперь это поле 'label', а не 'name'
+
+    def get_value(self, obj):
+        # Учитываем значение из поля 'label'
+        if obj.label.lower() == 'мужчина':
+            return 'man'
+        elif obj.label.lower() == 'женщина':
+            return 'woman'
+        return ''
