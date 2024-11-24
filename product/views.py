@@ -406,29 +406,69 @@ class ProductCreateView(generics.CreateAPIView):
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
 
+
+
+
 class ReviewCreateView(generics.CreateAPIView):
+
+
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
     permission_classes = [IsAuthenticated]
 
-    def post(self, request, *args, **kwargs):
-
-        if not request.user.is_authenticated:
-            return Response({"detail": "Authentication credentials were not provided."}, status=status.HTTP_401_UNAUTHORIZED)
-        return super().post(request, *args, **kwargs)
-
-class ReviewDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Review.objects.all()
-    serializer_class = ReviewSerializer
-    permission_classes = [IsAuthenticated]
     @swagger_auto_schema(
         tags=['review'],
-        operation_description="Этот эндпоинт позволяет получить определенный комменарий по id."
+        operation_description="Создать новый комментарий к продукту. Поле `user` берется из токена автоматически.",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'product': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID продукта'),
+                'comments': openapi.Schema(type=openapi.TYPE_STRING, description='Комментарий'),
+                'rating': openapi.Schema(type=openapi.TYPE_NUMBER, description='Рейтинг (от 1 до 10)')
+            },
+            required=['product', 'rating']
+        ),
+        responses={
+            201: openapi.Response('Комментарий успешно создан', ReviewSerializer),
+            400: "Ошибка валидации данных",
+            401: "Аутентификация не выполнена"
+        }
+    )
+    def post(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return Response(
+                {"detail": "Authentication credentials were not provided."},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        # Устанавливаем пользователя из токена перед сохранением
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(user=request.user)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class ReviewDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    Просмотр, обновление и удаление комментария по ID.
+    """
+    queryset = Review.objects.all()
+    serializer_class = ReviewSerializer
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        tags=['review'],
+        operation_description="Получить, обновить или удалить комментарий по его ID.",
+        responses={
+            200: openapi.Response('Успешное получение данных', ReviewSerializer),
+            401: "Аутентификация не выполнена",
+            404: "Комментарий не найден"
+        }
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
     def get_queryset(self):
+        # Фильтруем комментарии по ID из URL
         return Review.objects.filter(id=self.kwargs.get('pk'))
 
 

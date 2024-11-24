@@ -368,7 +368,6 @@ class CustomTokenRefreshView(TokenRefreshView):
     )
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
-
 class GenderListView(APIView):
     """
     Представление для получения списка всех объектов Gender.
