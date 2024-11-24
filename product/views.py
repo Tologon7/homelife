@@ -1,28 +1,25 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.pagination import PageNumberPagination
-from rest_framework import generics
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.filters import SearchFilter
-from drf_yasg.utils import swagger_auto_schema
-from .pagination import CustomPagination
-from rest_framework.viewsets import ModelViewSet
-from rest_framework.permissions import IsAuthenticated
-from product.serializers import *
-from django.db.models import Count, Avg
-from product.models import *
-from rest_framework.permissions import IsAuthenticated
-from .filters import ProductFilter
-from drf_yasg import openapi
-from django.db.models import Q
-from decimal import Decimal
 import logging
-from rest_framework.response import Response
+from decimal import Decimal
+
+from django.db.models import Count, Avg
+from django.db.models import Q
+from django_filters.rest_framework import DjangoFilterBackend
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics
-from .models import Review
-from .serializers import ReviewSerializer
+from rest_framework import status
+from rest_framework.filters import SearchFilter
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from product.models import *
+from product.serializers import *
+from .filters import ProductFilter
+from .models import Review
+from .pagination import CustomPagination
+from .serializers import ReviewSerializer
+
 logger = logging.getLogger(__name__)
 class HomepageView(APIView):
     @swagger_auto_schema(
