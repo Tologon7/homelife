@@ -110,7 +110,7 @@ class Review(models.Model):
 
 
 class Banner(models.Model):
-    image = CloudinaryField('image1')
+    image = CloudinaryField('image')
 
     def __str__(self):
-        return str(self.image)
+        return f"Banner {self.image}"

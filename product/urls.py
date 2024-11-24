@@ -23,7 +23,6 @@ urlpatterns = [
     path('comment/', ReviewCreateView.as_view(), name='create-review'),  # Маршрут для создания отзыва
     path('comment/<int:pk>/', ReviewDetailView.as_view(), name='review-detail'),
     # Маршрут для детального просмотра отзыва
-
-    path('banner/', BannerView.as_view(), name='homepage-banner'),
+    path('banner/', BannerDetailView.as_view(), name='banner-detail'),
 
 ]

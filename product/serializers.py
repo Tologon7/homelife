@@ -2,7 +2,8 @@ from rest_framework import serializers
 from django.db.models import Avg
 from .models import Product, Category, Color, Brand, Review, Banner
 from .utils import round_to_nearest_half
-
+from cloudinary.forms import CloudinaryFileField
+from django.conf import settings
 class CategorySerializer(serializers.ModelSerializer):
     value = serializers.SerializerMethodField()
 
@@ -451,8 +452,15 @@ class ReviewSerializer(serializers.ModelSerializer):
         representation.pop('user', None)
         return representation
 
-
 class BannerSerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()
+
     class Meta:
         model = Banner
-        fields = '__all__'
+        fields = ('id', 'image')
+
+    def get_image(self, obj):
+        # Если изображение существует, генерируем полный URL
+        if obj.image:
+            return f"https://res.cloudinary.com/{settings.CLOUDINARY_CLOUD_NAME}/image/upload/{obj.image}"
+        return None

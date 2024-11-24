@@ -1,25 +1,28 @@
-import logging
-from decimal import Decimal
-
-from django.db.models import Count, Avg
-from django.db.models import Q
-from django_filters.rest_framework import DjangoFilterBackend
-from drf_yasg import openapi
-from drf_yasg.utils import swagger_auto_schema
-from rest_framework import generics
-from rest_framework import status
-from rest_framework.filters import SearchFilter
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
 from rest_framework.views import APIView
-
-from product.models import *
-from product.serializers import *
-from .filters import ProductFilter
-from .models import Review
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.pagination import PageNumberPagination
+from rest_framework import generics
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter
+from drf_yasg.utils import swagger_auto_schema
 from .pagination import CustomPagination
+from rest_framework.viewsets import ModelViewSet
+from rest_framework.permissions import IsAuthenticated
+from product.serializers import *
+from django.db.models import Count, Avg
+from product.models import *
+from rest_framework.permissions import IsAuthenticated
+from .filters import ProductFilter
+from drf_yasg import openapi
+from django.db.models import Q
+from decimal import Decimal
+import logging
+from rest_framework.response import Response
+from rest_framework import generics
+from .models import Review
 from .serializers import ReviewSerializer
-
+from rest_framework.permissions import IsAuthenticated
 logger = logging.getLogger(__name__)
 class HomepageView(APIView):
     @swagger_auto_schema(
@@ -407,8 +410,9 @@ class ProductCreateView(generics.CreateAPIView):
 
 
 class ReviewCreateView(generics.CreateAPIView):
-
-
+    """
+    Создание нового комментария.
+    """
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
     permission_classes = [IsAuthenticated]
@@ -469,15 +473,10 @@ class ReviewDetailView(generics.RetrieveUpdateDestroyAPIView):
         return Review.objects.filter(id=self.kwargs.get('pk'))
 
 
-class BannerView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Banner.objects.all()
-    serializer_class = BannerSerializer
-
-    @swagger_auto_schema(
-        tags=['banner'],
-        operation_description="Этот эндпоинт позволяет получить, обновить или удалить баннер для главное страницы."
-    )
-    def get_object(self):
-        # Получаем первый объект, либо создаем его, если он не существует
-        obj, created = Banner.objects.get_or_create(id=1)
-        return obj
+class BannerDetailView(APIView):
+    def get(self, request, *args, **kwargs):
+        banner = Banner.objects.first()
+        if banner:
+            serializer = BannerSerializer(banner)
+            return Response(serializer.data)
+        return Response({"detail": "Banner not found"}, status=404)
