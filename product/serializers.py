@@ -6,6 +6,7 @@ from cloudinary.forms import CloudinaryFileField
 from django.conf import settings
 class CategorySerializer(serializers.ModelSerializer):
     value = serializers.SerializerMethodField()
+    label = serializers.SerializerMethodField()
 
     class Meta:
         model = Category
@@ -45,12 +46,13 @@ class CategorySerializer(serializers.ModelSerializer):
             'Хлебопечка': 'bread maker',
         }
 
-        # Если значение value уже есть
         if obj.value:
             return translation.get(obj.value, obj.value)
-
-        # Если value нет, присваиваем его на основе label
         return translation.get(obj.label.lower(), obj.label.lower())
+
+    def get_label(self, obj):
+        # Возвращаем label с первой заглавной буквой
+        return obj.label.capitalize()
 
     def create(self, validated_data):
         label = validated_data.get('label')
@@ -88,9 +90,7 @@ class CategorySerializer(serializers.ModelSerializer):
             'Хлебопечка': 'bread maker',
         }
 
-        # Присваиваем value на основе label
         validated_data['value'] = translation.get(label.lower(), label.lower())
-
         return super().create(validated_data)
 
 class ColorSerializer(serializers.ModelSerializer):
