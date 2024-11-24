@@ -9,6 +9,8 @@ from django.utils import timezone
 import pytz
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
+
+
 class Cart(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     ordered = models.BooleanField(default=False)
@@ -41,15 +43,14 @@ class CartItem(models.Model):
 
         super(CartItem, self).save(*args, **kwargs)
 
-        # Пересчитываем итоговую сумму и подытог корзины
         self.cart.update_totals()
 
     def subtotal(self):
-        """Подытог товара без учета скидки"""
+
         return self.product.price * self.quantity
 
     def total_price(self):
-        """Полная цена с учетом скидки"""
+
         return self.price * self.quantity
 
     def __str__(self):

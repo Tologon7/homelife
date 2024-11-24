@@ -275,30 +275,28 @@ class TokenRefreshSerializer(serializers.Serializer):
     access = serializers.CharField(min_length=1)
 
 # serializers.py
-
-
 class GenderSerializer(serializers.ModelSerializer):
-    label = serializers.SerializerMethodField()  # Отображение метки на русском
-    value = serializers.CharField()  # Значение, которое отправляется в запросах
+    label = serializers.CharField(read_only=True)  # Отображение текста на русском (только для GET)
+    value = serializers.CharField()  # Значение, принимаемое от фронтенда (например, 'man', 'woman')
 
     class Meta:
         model = Gender
         fields = ['label', 'value']
 
-    def get_label(self, obj):
-        # Возвращаем label, соответствующий значению value
-        return obj.label  # Поле label будет показывать текст на русском (например, "Мужчина")
-
     def create(self, validated_data):
-        # Логика для создания объекта, в котором value передается фронтом
+        # Сопоставление значений
+        value_to_label = {
+            'man': 'Мужчина',
+            'woman': 'Женщина'
+        }
+
+        # Получаем значение `value` из данных
         value = validated_data.get('value')
-        label = ''
+        label = value_to_label.get(value)
 
-        if value == 'man':
-            label = 'Мужчина'
-        elif value == 'woman':
-            label = 'Женщина'
+        if not label:
+            raise serializers.ValidationError({'value': 'Invalid value. Expected "man" or "woman".'})
 
-        # Создаем запись с полученными данными
+        # Создаем запись Gender
         gender = Gender.objects.create(label=label, value=value)
         return gender

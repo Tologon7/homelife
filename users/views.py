@@ -369,10 +369,18 @@ class CustomTokenRefreshView(TokenRefreshView):
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
 
-
-
 class GenderListView(APIView):
+    """
+    Представление для получения списка всех объектов Gender.
+    """
     def get(self, request):
-        genders = Gender.objects.all()
-        serializer = GenderSerializer(genders, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        try:
+            genders = Gender.objects.all()  # Получаем все записи Gender
+            serializer = GenderSerializer(genders, many=True)
+            return Response(serializer.data)  # 200 OK отправляется по умолчанию
+        except Exception as e:
+            # Если что-то пошло не так, возвращаем ошибку
+            return Response(
+                {"error": "Не удалось получить список полов.", "details": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
