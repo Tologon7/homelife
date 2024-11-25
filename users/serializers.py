@@ -36,6 +36,7 @@ class PasswordMixinRegister(serializers.Serializer):
         return attrs
 
 
+
 class PasswordMixin(serializers.Serializer):
     password = serializers.CharField(write_only=True, required=True)
     confirm_password = serializers.CharField(write_only=True, required=True)
@@ -53,22 +54,18 @@ class PasswordMixin(serializers.Serializer):
         if len(password) < 8:
             raise serializers.ValidationError({'password': "Password must be at least 8 characters long."})
         return attrs
+
+
 class GenderSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор для поля Gender, который возвращает 'value' и 'label'.
-    """
     class Meta:
         model = Gender
         fields = ['value', 'label']
 
 
 class UserSerializer(serializers.ModelSerializer):
-    # Поле gender принимает только значение value (например, 'man', 'woman'),
-    # но возвращает label (мужчина, женщина)
-    gender = serializers.CharField(write_only=True)  # Принимает только value (man, woman)
-    gender_display = GenderSerializer(source='gender', read_only=True)  # Возвращает label (мужчина, женщина)
+    gender = serializers.CharField(write_only=True)  # Принимает только 'man' или 'woman'
+    gender_display = GenderSerializer(source='gender', read_only=True)  # Возвращает label ('Мужчина' или 'Женщина')
 
-    # Валидаторы для username
     username = serializers.CharField(
         validators=[RegexValidator(
             regex=r'^[a-zA-Z0-9!@#$%^&*()_+.-]+$',
@@ -82,7 +79,6 @@ class UserSerializer(serializers.ModelSerializer):
     number = serializers.IntegerField()
     wholesaler = serializers.BooleanField()
 
-    # Добавляем поле role для возвращения роли
     role = serializers.SerializerMethodField()
 
     class Meta:
@@ -90,7 +86,6 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'gender', 'gender_display', 'age', 'email', 'number', 'wholesaler', 'role']
 
     def get_role(self, obj):
-        # Логика для получения роли пользователя
         if obj.is_superuser:
             return 'admin'
         elif obj.wholesaler:
@@ -98,28 +93,22 @@ class UserSerializer(serializers.ModelSerializer):
         else:
             return 'client'
 
+    def validate_gender(self, value):
+        # Проверяем, что gender равно 'man' или 'woman'
+        if value not in ['man', 'woman']:
+            raise serializers.ValidationError("Invalid gender value. Must be 'man' or 'woman'.")
+        return value
+
     def create(self, validated_data):
-        # Обрабатываем поле gender для получения объекта Gender по значению 'value'
         gender_value = validated_data.pop('gender', None)
         if gender_value:
-            try:
-                # Получаем объект Gender по значению 'value'
-                gender_instance = Gender.objects.get(value=gender_value)
-                validated_data['gender'] = gender_instance  # Присваиваем объект Gender в validated_data
-            except Gender.DoesNotExist:
-                raise serializers.ValidationError("Invalid gender value. Must be 'man' or 'woman'.")
+            validated_data['gender'] = Gender.objects.get(value=gender_value)
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
-        # Обрабатываем поле gender для обновления объекта Gender
         gender_value = validated_data.pop('gender', None)
         if gender_value:
-            try:
-                # Получаем объект Gender по значению 'value'
-                gender_instance = Gender.objects.get(value=gender_value)
-                instance.gender = gender_instance  # Обновляем поле gender
-            except Gender.DoesNotExist:
-                raise serializers.ValidationError("Invalid gender value. Must be 'man' or 'woman'.")
+            instance.gender = Gender.objects.get(value=gender_value)
         return super().update(instance, validated_data)
 
 class UserProfileSerializer(serializers.ModelSerializer):

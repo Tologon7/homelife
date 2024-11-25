@@ -441,17 +441,28 @@ class ReviewSerializer(serializers.ModelSerializer):
         ]
 
     def get_product_title(self, obj):
+        """
+        Возвращает название продукта.
+        Если продукт отсутствует, возвращает 'unknown'.
+        """
         return obj.product.title if obj.product else 'unknown'
 
     def get_user_name(self, obj):
+        """
+        Возвращает имя пользователя.
+        Если пользователь отсутствует, возвращает 'unknown'.
+        """
         return obj.user.username if obj.user else 'unknown'
 
     def to_representation(self, instance):
+        """
+        Удаляет поля 'product' и 'user' из сериализованных данных,
+        оставляя только 'product_title' и 'user_name'.
+        """
         representation = super().to_representation(instance)
         representation.pop('product', None)
         representation.pop('user', None)
         return representation
-
 class BannerSerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField()
 

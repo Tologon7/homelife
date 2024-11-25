@@ -407,12 +407,7 @@ class ProductCreateView(generics.CreateAPIView):
         return super().post(request, *args, **kwargs)
 
 
-
-
 class ReviewCreateView(generics.CreateAPIView):
-    """
-    Создание нового комментария.
-    """
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
     permission_classes = [IsAuthenticated]
@@ -425,14 +420,15 @@ class ReviewCreateView(generics.CreateAPIView):
             properties={
                 'product': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID продукта'),
                 'comments': openapi.Schema(type=openapi.TYPE_STRING, description='Комментарий'),
-                'rating': openapi.Schema(type=openapi.TYPE_NUMBER, description='Рейтинг (от 1 до 10)')
+                'rating': openapi.Schema(type=openapi.TYPE_NUMBER, description='Рейтинг (от 1 до 5)')
             },
             required=['product', 'rating']
         ),
         responses={
             201: openapi.Response('Комментарий успешно создан', ReviewSerializer),
             400: "Ошибка валидации данных",
-            401: "Аутентификация не выполнена"
+            401: "Аутентификация не выполнена",
+            404: "Продукт не найден"
         }
     )
     def post(self, request, *args, **kwargs):
@@ -444,9 +440,11 @@ class ReviewCreateView(generics.CreateAPIView):
         # Устанавливаем пользователя из токена перед сохранением
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save(user=request.user)
+        try:
+            serializer.save(user=request.user)
+        except Product.DoesNotExist:
+            return Response({"detail": "Продукт не найден"}, status=status.HTTP_404_NOT_FOUND)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-
 
 class ReviewDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
@@ -462,6 +460,7 @@ class ReviewDetailView(generics.RetrieveUpdateDestroyAPIView):
         responses={
             200: openapi.Response('Успешное получение данных', ReviewSerializer),
             401: "Аутентификация не выполнена",
+            403: "Доступ запрещен",
             404: "Комментарий не найден"
         }
     )
@@ -469,8 +468,8 @@ class ReviewDetailView(generics.RetrieveUpdateDestroyAPIView):
         return super().get(request, *args, **kwargs)
 
     def get_queryset(self):
-        # Фильтруем комментарии по ID из URL
-        return Review.objects.filter(id=self.kwargs.get('pk'))
+        # Фильтруем комментарии: пользователь может редактировать/удалять только свои
+        return Review.objects.filter(user=self.request.user)
 
 
 class BannerDetailView(APIView):
