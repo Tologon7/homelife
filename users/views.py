@@ -47,7 +47,7 @@ from rest_framework_simplejwt.tokens import AccessToken
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 
-
+from .models import Gender
 class UserMeView(generics.RetrieveAPIView):
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
@@ -368,18 +368,34 @@ class CustomTokenRefreshView(TokenRefreshView):
     )
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
-class GenderListView(APIView):
-    """
-    Представление для получения списка всех объектов Gender.
-    """
-    def get(self, request):
-        try:
-            genders = Gender.objects.all()  # Получаем все записи Gender
-            serializer = GenderSerializer(genders, many=True)
-            return Response(serializer.data)  # 200 OK отправляется по умолчанию
-        except Exception as e:
-            # Если что-то пошло не так, возвращаем ошибку
-            return Response(
-                {"error": "Не удалось получить список полов.", "details": str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+
+
+
+
+class GenderListCreateView(generics.ListCreateAPIView):
+    queryset = Gender.objects.all()  # Все объекты Gender
+    serializer_class = GenderSerializer  # Сериализатор для Gender
+
+    @swagger_auto_schema(
+        tags=['gender'],
+        operation_description="Этот эндпоинт позволяет получить список всех полов."
+    )
+    def get(self, request, *args, **kwargs):
+        """
+        Получение списка всех полов
+        """
+        return super().get(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        tags=['gender'],
+        operation_description="Этот эндпоинт позволяет создать новый пол."
+    )
+    def post(self, request, *args, **kwargs):
+        """
+        Создание нового пола
+        """
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()  # Сохраняем новый пол
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

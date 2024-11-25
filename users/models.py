@@ -27,12 +27,11 @@ class CustomUserManager(BaseUserManager):
         return self.create_user(email, password, **extra_fields)
 
 class Gender(models.Model):
-    label = models.CharField(max_length=10)  # Название пола (например, "Мужчина")
-    value = models.CharField(max_length=10)  # Значение (например, "man")
+    value = models.CharField(max_length=50, unique=True)  # Поле value будет уникальным (например, 'man', 'woman')
+    label = models.CharField(max_length=50)  # Поле label для отображаемого значения (например, 'мужчина', 'женщина')
 
     def __str__(self):
         return self.label
-
 class User(AbstractBaseUser, PermissionsMixin):
     USER_ROLE_CHOICES = [
         ('admin', 'Admin'),

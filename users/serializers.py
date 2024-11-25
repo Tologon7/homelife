@@ -1,16 +1,23 @@
-from users.models import *
-from django.core.validators import RegexValidator
-from django.contrib.auth import get_user_model
-from rest_framework import serializers
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from django.core.mail import send_mail
-from django.contrib.auth.hashers import make_password
 import random
-from datetime import timedelta
-from django.utils import timezone
 import re
 from rest_framework import serializers
+from .models import User, Gender
+from django.core.exceptions import ValidationError
+from django.core.validators import RegexValidator
+
+from datetime import timedelta
+from rest_framework import serializers
+from .models import User, Gender
+# from rest_framework.validators import RegexValidator
+from django.contrib.auth.hashers import make_password
+from django.core.mail import send_mail
+from django.core.validators import RegexValidator
+from django.utils import timezone
+from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.tokens import RefreshToken
+
+from users.models import *
 from .models import Gender
 
 
@@ -46,9 +53,22 @@ class PasswordMixin(serializers.Serializer):
         if len(password) < 8:
             raise serializers.ValidationError({'password': "Password must be at least 8 characters long."})
         return attrs
+class GenderSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для поля Gender, который возвращает 'value' и 'label'.
+    """
+    class Meta:
+        model = Gender
+        fields = ['value', 'label']
 
 
 class UserSerializer(serializers.ModelSerializer):
+    # Поле gender принимает только значение value (например, 'man', 'woman'),
+    # но возвращает label (мужчина, женщина)
+    gender = serializers.CharField(write_only=True)  # Принимает только value (man, woman)
+    gender_display = GenderSerializer(source='gender', read_only=True)  # Возвращает label (мужчина, женщина)
+
+    # Валидаторы для username
     username = serializers.CharField(
         validators=[RegexValidator(
             regex=r'^[a-zA-Z0-9!@#$%^&*()_+.-]+$',
@@ -57,16 +77,17 @@ class UserSerializer(serializers.ModelSerializer):
         min_length=6,
         max_length=20,
     )
+
     email = serializers.EmailField()
     number = serializers.IntegerField()
     wholesaler = serializers.BooleanField()
 
-    # Добавляем поле role в сериализатор
+    # Добавляем поле role для возвращения роли
     role = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'gender', 'age', 'email', 'number', 'wholesaler', 'role']
+        fields = ['id', 'username', 'gender', 'gender_display', 'age', 'email', 'number', 'wholesaler', 'role']
 
     def get_role(self, obj):
         # Логика для получения роли пользователя
@@ -76,6 +97,30 @@ class UserSerializer(serializers.ModelSerializer):
             return 'wholesaler'
         else:
             return 'client'
+
+    def create(self, validated_data):
+        # Обрабатываем поле gender для получения объекта Gender по значению 'value'
+        gender_value = validated_data.pop('gender', None)
+        if gender_value:
+            try:
+                # Получаем объект Gender по значению 'value'
+                gender_instance = Gender.objects.get(value=gender_value)
+                validated_data['gender'] = gender_instance  # Присваиваем объект Gender в validated_data
+            except Gender.DoesNotExist:
+                raise serializers.ValidationError("Invalid gender value. Must be 'man' or 'woman'.")
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        # Обрабатываем поле gender для обновления объекта Gender
+        gender_value = validated_data.pop('gender', None)
+        if gender_value:
+            try:
+                # Получаем объект Gender по значению 'value'
+                gender_instance = Gender.objects.get(value=gender_value)
+                instance.gender = gender_instance  # Обновляем поле gender
+            except Gender.DoesNotExist:
+                raise serializers.ValidationError("Invalid gender value. Must be 'man' or 'woman'.")
+        return super().update(instance, validated_data)
 
 class UserProfileSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
@@ -274,9 +319,4 @@ class UserListSerializer(serializers.ModelSerializer):
 class TokenRefreshSerializer(serializers.Serializer):
     access = serializers.CharField(min_length=1)
 
-class UserSerializer(serializers.ModelSerializer):
-    gender = serializers.PrimaryKeyRelatedField(queryset=Gender.objects.all(), required=False)  # Поле gender ожидает ID
 
-    class Meta:
-        model = User
-        fields = ['id', 'username', 'gender', 'age', 'email', 'number', 'wholesaler', 'is_active', 'is_staff', 'role', 'otp_code', 'otp_created_at']
