@@ -372,8 +372,8 @@ class CustomTokenRefreshView(TokenRefreshView):
 
 
 class GenderListCreateView(generics.ListCreateAPIView):
-    queryset = Gender.objects.all()  # Все объекты Gender
-    serializer_class = GenderSerializer  # Сериализатор для Gender
+    queryset = Gender.objects.all()
+    serializer_class = GenderSerializer
 
     @swagger_auto_schema(
         tags=['gender'],

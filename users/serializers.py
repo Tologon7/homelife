@@ -59,11 +59,10 @@ class PasswordMixin(serializers.Serializer):
 class GenderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Gender
-        fields = ['value', 'label']
-
-
+        fields = ['id', 'label']
 class UserSerializer(serializers.ModelSerializer):
-    gender = serializers.CharField(write_only=True)  # Принимает только 'man' или 'woman'
+    # Поле gender теперь принимает PK значения
+    gender = serializers.PrimaryKeyRelatedField(queryset=Gender.objects.all(), write_only=True)  # Принимает PK
     gender_display = GenderSerializer(source='gender', read_only=True)  # Возвращает label ('Мужчина' или 'Женщина')
 
     username = serializers.CharField(
@@ -93,24 +92,17 @@ class UserSerializer(serializers.ModelSerializer):
         else:
             return 'client'
 
-    def validate_gender(self, value):
-        # Проверяем, что gender равно 'man' или 'woman'
-        if value not in ['man', 'woman']:
-            raise serializers.ValidationError("Invalid gender value. Must be 'man' or 'woman'.")
-        return value
-
     def create(self, validated_data):
-        gender_value = validated_data.pop('gender', None)
-        if gender_value:
-            validated_data['gender'] = Gender.objects.get(value=gender_value)
+        gender_instance = validated_data.pop('gender', None)
+        if gender_instance:
+            validated_data['gender'] = gender_instance
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
-        gender_value = validated_data.pop('gender', None)
-        if gender_value:
-            instance.gender = Gender.objects.get(value=gender_value)
+        gender_instance = validated_data.pop('gender', None)
+        if gender_instance:
+            instance.gender = gender_instance  # Обновляем объект Gender
         return super().update(instance, validated_data)
-
 class UserProfileSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
         validators=[RegexValidator(
