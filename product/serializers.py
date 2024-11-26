@@ -289,7 +289,7 @@ class ProductSerializer(serializers.ModelSerializer):
             'quantity',
             'description',
             'is_product_of_the_day',
-            'comment',  # Это поле скорее всего надо изменить, если оно использовало reviews
+            'comments',  # Это поле скорее всего надо изменить, если оно использовало reviews
             'avg_rating',
             'is_active',
         ]
@@ -297,7 +297,7 @@ class ProductSerializer(serializers.ModelSerializer):
     def get_avg_rating(self, obj):
         # Используем comments, а не reviews
         if obj.comments.exists():  # Замените reviews на comments
-            avg_rating = obj.comments.aggregate(models.Avg('rating'))['rating__avg']
+            avg_rating = obj.comments.aggregate(Avg('rating'))['rating__avg']
             return avg_rating
         return None
 
@@ -414,8 +414,8 @@ class ProductCreateSerializer(serializers.ModelSerializer):
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
-        fields = ['id', 'product', 'user', 'comments', 'rating', 'created', 'updated']
-        read_only_fields = ['user']  # user будет заполняться автоматически
+        fields = ['id', 'product', 'comments', 'rating', 'created', 'updated']
+
 
 class BannerSerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField()

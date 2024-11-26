@@ -1,45 +1,47 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.pagination import PageNumberPagination
-from rest_framework import generics
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.filters import SearchFilter
-from drf_yasg.utils import swagger_auto_schema
-from .pagination import CustomPagination
-from rest_framework.viewsets import ModelViewSet
-from rest_framework.permissions import IsAuthenticated
-from product.serializers import *
-from django.db.models import Count, Avg
-from product.models import *
-from rest_framework.permissions import IsAuthenticated
-from .filters import ProductFilter
-from drf_yasg import openapi
-from django.db.models import Q
-from decimal import Decimal
 import logging
-from rest_framework.response import Response
+from decimal import Decimal
+from django.db.models import Count, Avg
+from django.db.models import Q
+from django_filters.rest_framework import DjangoFilterBackend
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics
-from .models import Comment
+from rest_framework import generics
+from rest_framework import status
+from rest_framework import status
+from rest_framework import status
 from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticated
-from .models import Comment
-from .serializers import *
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from .models import Comment
-from .serializers import CommentSerializer
-from rest_framework.permissions import IsAuthenticated
-
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
-from rest_framework.views import APIView
+from rest_framework.filters import SearchFilter
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework import status
-from .serializers import CommentSerializer
+from rest_framework.response import Response
+from rest_framework.response import Response
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.views import APIView
+from rest_framework.views import APIView
+from rest_framework.viewsets import ModelViewSet
+from rest_framework_simplejwt.authentication import JWTAuthentication
+
+from product.models import *
+from product.serializers import *
+from .filters import ProductFilter
 from .models import Comment
+from .models import Comment
+from .models import Comment
+from .models import Comment
+from .pagination import CustomPagination
+from .serializers import *
+from .serializers import CommentSerializer
+from .serializers import CommentSerializer
+
 logger = logging.getLogger(__name__)
 class HomepageView(APIView):
     @swagger_auto_schema(
@@ -425,8 +427,8 @@ class ProductCreateView(generics.CreateAPIView):
 
 
 class CommentCreateView(APIView):
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
-    authentication_classes = [TokenAuthentication]
 
     def get(self, request):
         product_id = request.query_params.get('product_id')
@@ -448,7 +450,6 @@ class CommentCreateView(APIView):
             serializer.save(user=request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 class BannerDetailView(APIView):
     def get(self, request, *args, **kwargs):
